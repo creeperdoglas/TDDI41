@@ -56,6 +56,32 @@ def add_user(username, password):
     except subprocess.CalledProcessError as e:
         print(f"Fel uppstod när användaren '{username}' skapades: {e}", file=sys.stderr)
 
+def test_root_user_exists():
+    """Testfall för att verifiera att användaren 'root' existerar"""
+    if user_exists('root'):
+        print("Test 1: Användaren 'root' existerar - OK")
+    else:
+        print("Test 1: Användaren 'root' saknas - FAIL")
+        sys.exit(1)
+
+def test_games_user_noshell():
+    """Testfall för att verifiera att användaren 'games' inte har ett giltigt skal"""
+    try:
+        shell = subprocess.run(['getent', 'passwd', 'games'], capture_output=True, text=True)
+        if shell.returncode == 0:
+            user_shell = shell.stdout.strip().split(':')[-1]
+            if user_shell in ['/usr/sbin/nologin', '/bin/false']:
+                print("Test 2: Användaren 'games' har inget giltigt skal - OK")
+            else:
+                print(f"Test 2: Användaren 'games' har ett giltigt skal ({user_shell}) - FAIL")
+                sys.exit(1)
+        else:
+            print("Test 2: Användaren 'games' finns inte - FAIL")
+            sys.exit(1)
+    except Exception as e:
+        print(f"Fel vid kontroll av skal för användaren 'games': {e}")
+        sys.exit(1)
+
 def main():
     if len(sys.argv) != 2:
         print(f"Användning: {sys.argv[0]} <fil med namn>", file=sys.stderr)
@@ -77,6 +103,10 @@ def main():
         password = generate_password()
         add_user(username, password)
 
+    # Kör testerna efter att användare har skapats
+    print("\n-- Kör testerna --")
+    test_root_user_exists()
+    test_games_user_noshell()
+
 if __name__ == "__main__":
     main()
-
