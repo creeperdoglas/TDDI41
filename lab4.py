@@ -25,10 +25,16 @@ def generate_username(full_name):
 
 def user_exists(username):
     try:
-        subprocess.run(['id', username], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
-    except FileNotFoundError:
+        # Kontrollera om användaren existerar med en timeout för att undvika hängande process
+        result = subprocess.run(['id', username], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+        return result.returncode == 0  # Om kommandot returnerar 0, finns användaren
+    except subprocess.TimeoutExpired:
+        print(f"Timeout vid kontroll av användare: {username}")
         return False
+    except Exception as e:
+        print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
+        return False
+
 
 def generate_password(length=12):
     # Generera ett slumpmässigt lösenord med bokstäver, siffror och specialtecken.
