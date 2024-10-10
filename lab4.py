@@ -16,12 +16,21 @@ def generate_username(full_name):
     # Begränsa längden och ta bort ogiltiga tecken.
     username = ''.join(filter(str.isalnum, username))[:8]
 
+if not username.isascii():
+print ("ogiltigt namn, skapar slumpmässigt istället")
+username= generate_random_username()
+
     # Lägg till slumpmässiga siffror om användarnamnet redan används
     while user_exists(username):
         suffix = ''.join(random.choices(string.digits, k=2))
         username = username[:6] + suffix
 
     return username
+
+def generate_random_username(length=8):
+    letters_and_digits = string.ascii_lowercase + string.digits
+return 
+''.join(random.choices(letters_and_digits, k=length))
 
 def user_exists(username):
     try:
