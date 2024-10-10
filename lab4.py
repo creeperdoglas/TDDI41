@@ -43,18 +43,20 @@ def generate_password(length=12):
     return password
 
 def add_user(username, password):
-    # Skapa användarkonto med hemkatalog.
+    print(f"Skapar användare {username}...")
     try:
-        subprocess.run(['sudo', 'useradd', '-m', '-s', '/bin/bash', username], check=True)
-        
-        # Använd subprocess för att sätta lösenordet genom en pipe.
-        subprocess.run(['echo', f'{username}:{password}'], check=True, text=True,
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        subprocess.run(['sudo', 'chpasswd'], input=f'{username}:{password}', text=True, check=True)
+        # Skapa användarkonto
+        subprocess.run(['useradd', '-m', '-s', '/bin/bash', username], check=True)
+        print(f"Användare {username} skapad.")
 
-        print(f"Användare '{username}' har skapats med lösenord: {password}")
+        # Sätt lösenord via pipe till chpasswd för säker hantering
+        passwd_input = f'{username}:{password}'
+        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
+        print(f"Lösenord satt för {username}.")
     except subprocess.CalledProcessError as e:
-        print(f"Fel uppstod när användaren '{username}' skapades: {e}", file=sys.stderr)
+        print(f"Fel uppstod när användaren {username} skapades: {e}")
+        sys.exit(1)
+
 
 def test_root_user_exists():
     """Testfall för att verifiera att användaren 'root' existerar"""
