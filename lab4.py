@@ -52,7 +52,9 @@ def add_user(username, password):
         # Sätt lösenord via pipe till chpasswd för säker hantering
         passwd_input = f'{username}:{password}'
         subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
-        print(f"Lösenord satt för {username}.")
+
+        # Skriv ut användarnamn och lösenord till terminalen (du kan också logga detta)
+        print(f"Användare '{username}' har skapats med lösenord: {password}")
     except subprocess.CalledProcessError as e:
         print(f"Fel uppstod när användaren {username} skapades: {e}")
         sys.exit(1)
