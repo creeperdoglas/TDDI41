@@ -1,0 +1,19 @@
+Vad är kommandot för att skicka 5 paket till localhost?
+ping -c 5 127.0.0.1
+
+
+Vad är kommandot för att skicka 3 paket till localhost med 2 sekunders mellanrum mellan varje paket?
+ping -c 3 -i 2 127.0.0.1
+
+
+Vad är kommandot för att lista adresserna för alla nätverksinterface i datorn?
+ip addr
+
+Vad är kommandot för att ta nätverksinterfacet ens4 online?
+ip set link ens4 up
+
+Vad är kommandot för att ge nätverksinterfacet ens4 ip-adressen 192.168.1.2 med en 24-bitars nätmask?
+ip addr add 192.168.1.2/24 dev ens4
+
+Vad är kommandot för att visa routing-tabellen?
+ip route
