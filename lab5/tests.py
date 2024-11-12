@@ -53,7 +53,7 @@ def test_ip_forwarding():
 
 def test_ip_masquerading(interface="ens3"):
     """Check if IP masquerading is set up on the router."""
-    nft_output = run_command("sudo nft list ruleset")
+    nft_output = run_command("nft list ruleset")
     masquerade_rule = f"oifname \"{interface}\" masquerade"
     return masquerade_rule in nft_output
 
