@@ -24,13 +24,19 @@ def test_network_settings(expected_ip, expected_netmask, expected_gateway):
     ip_output = run_command("ip addr show")
     route_output = run_command("ip route show")
     
-    # Check IP and netmask
-    ip_test = expected_ip in ip_output and expected_netmask in ip_output
+    # Convert expected IP and netmask to CIDR notation
+    # funkade ej förut, eftersom exempelvis /24 i slutet men detta är mycket "snyggare" än att bara ändra expected ip
+    mask_length = sum(bin(int(x)).count('1') for x in expected_netmask.split('.'))
+    expected_cidr = f"{expected_ip}/{mask_length}"
+    
+    # Check IP and netmask (in CIDR format)
+    ip_test = expected_cidr in ip_output
     
     # Check gateway
     gateway_test = f"default via {expected_gateway}" in route_output if expected_gateway else True
 
     return ip_test, gateway_test
+
 
 def test_hostname(expected_hostname):
     """Check if the machine has the correct hostname."""
