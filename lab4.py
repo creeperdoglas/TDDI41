@@ -16,12 +16,20 @@ def generate_username(full_name):
     # Begränsa längden och ta bort ogiltiga tecken.
     username = ''.join(filter(str.isalnum, username))[:8]
 
+    if not username.isascii():
+        print (f"ogiltigt namn, felaktiga tecken i {full_name}, skapar slumpmässigt istället")
+        username= generate_random_username()
+
     # Lägg till slumpmässiga siffror om användarnamnet redan används
     while user_exists(username):
         suffix = ''.join(random.choices(string.digits, k=2))
         username = username[:6] + suffix
 
     return username
+
+def generate_random_username(length=8):
+    letters_and_digits = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(letters_and_digits, k=length))
 
 def user_exists(username):
     try:
@@ -59,7 +67,7 @@ def add_user(username, password):
         print(f"Fel uppstod när användaren {username} skapades: {e}")
         sys.exit(1)
 
-
+"""TESTFALL ENLIGT INTSTUKTIONER"""
 def test_root_user_exists():
     """Testfall för att verifiera att användaren 'root' existerar"""
     if user_exists('root'):
