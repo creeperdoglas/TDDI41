@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
+#behöver specifera annars får qemu problem att förstå att det är python
 import subprocess
 import sys
 
+
+#denna grund borde passa bra för att sedan kunna utöka till senare labbar (förhoppningsvis, har ej kollat)
+#speciellt därför man ska specifera maskin som ska köras då exempelvis i labb 6 för att testa dns kan jag specifera
+#server och även köra dns tester :D
 # -------------------- Helper functions --------------------
 
 def run_command(command):
@@ -13,23 +18,23 @@ def run_command(command):
         return None
 
 def ping_test(ip):
-    """Ping a given IP address and return True if successful."""
+    """Ping a given IP address and return True (0) if successful."""
     command = f"ping -c 1 {ip}"
     return subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode == 0
 
-# -------------------- Tests for all machines --------------------
+# -------------------- Tests för alla --------------------
 
 def test_network_settings(expected_ip, expected_netmask, expected_gateway):
     """Check if the machine has the correct IP, netmask, and gateway."""
     ip_output = run_command("ip addr show")
     route_output = run_command("ip route show")
     
-    # Convert expected IP and netmask to CIDR notation
+   
     # funkade ej förut, eftersom exempelvis /24 i slutet men detta är mycket "snyggare" än att bara ändra expected ip
     mask_length = sum(bin(int(x)).count('1') for x in expected_netmask.split('.'))
     expected_cidr = f"{expected_ip}/{mask_length}"
     
-    # Check IP and netmask (in CIDR format)
+    #check ip +netmask
     ip_test = expected_cidr in ip_output
     
     # Check gateway
@@ -47,7 +52,7 @@ def test_reach_router(router_ip):
     """Check if the machine can reach the router."""
     return ping_test(router_ip)
 
-# -------------------- Tests specific to the router --------------------
+# -------------------- Tests specifika till router --------------------
 
 def test_reach_external_ip(external_ip="10.0.2.2"):
     """Check if the router can reach an external IP."""
@@ -67,7 +72,7 @@ def test_ip_masquerading(interface="ens3"):
 # -------------------- Main test function --------------------
 
 def run_tests(machine_name):
-    # Define expected values for each machine
+    # definera för varje maskin
     machines = {
         "client-1": {
             "expected_ip": "10.0.0.2",
@@ -90,22 +95,22 @@ def run_tests(machine_name):
         "router": {
             "expected_ip": "10.0.0.1",
             "expected_netmask": "255.255.255.0",
-            "expected_gateway": None,
+            "expected_gateway": None, #router har ej en gateway
             "expected_hostname": "gw"
         }
     }
 
-    # Check if the specified machine exists in the configuration
+    # kolla om den existerar
     if machine_name not in machines:
         print(f"Error: Unknown machine '{machine_name}'")
         sys.exit(1)
 
-    # Get the expected values for the specified machine
+   
     config = machines[machine_name]
-    router_ip = "10.0.0.1"  # Define the router's IP for reachability tests
-    external_ip = "10.0.2.2"  # Define an external IP for the router
+    router_ip = "10.0.0.1"  
+    external_ip = "10.0.2.2"  
 
-    # Run tests for the specified machine
+    # kör
     print(f"Running tests for {machine_name}:")
     
     ip_test, gateway_test = test_network_settings(config["expected_ip"], config["expected_netmask"], config["expected_gateway"])
@@ -118,7 +123,7 @@ def run_tests(machine_name):
     router_reach_test = test_reach_router(router_ip)
     print(f" - Reach Router Test: {'Pass' if router_reach_test else 'Fail'}")
     
-    # Run additional tests specific to the router
+    # kör mer för router
     if machine_name == "router":
         print("\nRunning additional tests specific to the router:")
         
@@ -131,10 +136,10 @@ def run_tests(machine_name):
         masquerading_test = test_ip_masquerading()
         print(f" - IP Masquerading Test: {'Pass' if masquerading_test else 'Fail'}")
 
-# -------------------- Script Entry Point --------------------
+
 
 if __name__ == "__main__":
-    # Check for a machine name argument
+
     if len(sys.argv) != 2:
         print("Usage: ./tests.py <machine_name>")
         sys.exit(1)
