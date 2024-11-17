@@ -1,7 +1,10 @@
 Vad är en auktoritativ namnserver?
 Den servern som innehåller den slutgiltiga DNS informationen som behövs för att lösa en DNS förfrågan. Alltså servern har den faktiska adressregistret som är kopplat till det specifika domännamnet.
 
-Vad är alternativet till en auktoritativ namnserver
+Vad är alternativet till en auktoritativ namnserver?
+En rekursiv namnserver.
+
+
 
 Är det skillnad mellan en domän och en zon? Vilken skillnad isåfall?
 
