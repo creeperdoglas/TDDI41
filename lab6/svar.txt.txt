@@ -5,8 +5,8 @@ Vad är alternativet till en auktoritativ namnserver?
 En rekursiv namnserver.
 
 
-
 Är det skillnad mellan en domän och en zon? Vilken skillnad isåfall?
+
 
 Vad innebär rekursiv slagning? Iterativ? Hur vet DNS-servern du frågar om det är en rekursivt ställd fråga?
 
