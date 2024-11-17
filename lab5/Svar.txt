@@ -17,3 +17,48 @@ ip addr add 192.168.1.2/24 dev ens4
 
 Vad är kommandot för att visa routing-tabellen?
 ip route
+
+
+Labben "genomgång" :
+
+Ändrar etc/hostname , uppenbart vad detta gör
+Sedan även etc/hosts för att varje maskin kan använda sitt egna namn i nätverket.
+Ändrar etc/network/interfaces på klient och server att ha statisk ip. På routern ska ens3 vara på auto och ens4 sätts upp istället med en statisk adress. ens4 har på klient och server statisk ens3 adress, inklusive gateway och netmask.
+netmask 255.255.255.0 och gateway 10.0.0.1
+För att aktivera ip forwarding: gå in i etc/sysctl.conf och avkommentera net.ipv4.ip_forward = 1.
+För att konfigurera ip masquerading görs i etc/nftables.conf, nedan är exemplet för routern:  
+
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy drop;
+        ct state established, related accept
+        ip protocol icmp accept
+        tcp dport 22 accept
+	if "lo" accept
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy drop;
+        ct state established, related accept
+        ip saddr 10.0.0.0/24 oifname "ens3" accept
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}
+
+table ip nat {
+    chain postrouting {
+        type nat hook postrouting priority 100; policy accept;
+        oifname "ens3" masquerade
+    }
+}
+
+kommer vara likadant för client 1,2 och server förutom att de ej kommer ha table ip nat delen då det är endast routern som maskerar.
+
+
