@@ -10,3 +10,10 @@ Vad innebär rekursiv slagning? Iterativ? Hur vet DNS-servern du frågar om det 
 I DNS delegerar vi ansvaret för olika zoner. Varför?
 
 Ovan beskriver vi hur man kommer fram till att liu.se har adressen 130.236.18.52 (och hela delegerings-hierarkin från root till auktoriteten för .se-domänen, till liu.se). Hur sker en uppslagning ''åt andra hållet'', där man vill slå upp om adressen 130.236.18.52 motsvarar någon webbadress (enligt din DNS-server)? Du kan vilja läsa om reverse DNS.
+
+
+
+A-poster: Dessa kopplar ett domännamn till en IPv4-adress.
+AAAA-poster: Liknar A-poster, men kopplar ett domännamn till en IPv6-adress.
+CNAME-poster: Används för att peka ett domännamn till ett annat domännamn istället för en IP-adress.
+MX-poster: Dirigerar e-posttrafik till rätt server.
