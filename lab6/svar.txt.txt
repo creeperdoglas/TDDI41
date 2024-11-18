@@ -2,15 +2,18 @@ Vad är en auktoritativ namnserver?
 Den servern som innehåller den slutgiltiga DNS informationen som behövs för att lösa en DNS förfrågan. Alltså servern har den faktiska adressregistret som är kopplat till det specifika domännamnet.
 
 Vad är alternativet till en auktoritativ namnserver?
-En rekursiv namnserver.
+En rekursiv namnserver (icke auktoritativ namnserver).
 
 
 Är det skillnad mellan en domän och en zon? Vilken skillnad isåfall?
+Skillnaden är att en domän är ett logiskt namnsystem medan en zon är en fysisk implementation av DNS-databasen på DNS-servrar. Så zonen innehåller alla namn och deras tillhörande IP-adresser. 
 
 
 Vad innebär rekursiv slagning? Iterativ? Hur vet DNS-servern du frågar om det är en rekursivt ställd fråga?
 
+
 I DNS delegerar vi ansvaret för olika zoner. Varför?
+
 
 Ovan beskriver vi hur man kommer fram till att liu.se har adressen 130.236.18.52 (och hela delegerings-hierarkin från root till auktoriteten för .se-domänen, till liu.se). Hur sker en uppslagning ''åt andra hållet'', där man vill slå upp om adressen 130.236.18.52 motsvarar någon webbadress (enligt din DNS-server)? Du kan vilja läsa om reverse DNS.
 
@@ -20,3 +23,4 @@ A-poster: Dessa kopplar ett domännamn till en IPv4-adress.
 AAAA-poster: Liknar A-poster, men kopplar ett domännamn till en IPv6-adress.
 CNAME-poster: Används för att peka ett domännamn till ett annat domännamn istället för en IP-adress.
 MX-poster: Dirigerar e-posttrafik till rätt server.
+SOA-posten: innehåller serie nummer, refresh, retry och expire time, min TTL och TTL.
