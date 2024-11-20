@@ -22,8 +22,35 @@ Så reverse uppslagning för adressen 130.236.18.52 skulle ge 52.18.236.130.in-a
 
 
 
-A-poster: Dessa kopplar ett domännamn till en IPv4-adress.
-AAAA-poster: Liknar A-poster, men kopplar ett domännamn till en IPv6-adress.
-CNAME-poster: Används för att peka ett domännamn till ett annat domännamn istället för en IP-adress.
-MX-poster: Dirigerar e-posttrafik till rätt server.
-SOA-posten: innehåller serie nummer, refresh, retry och expire time, min TTL och TTL (Time to live).
+1. Förklara kortfattat vad de olika delarna av utskriften innebär.
+förklaring till varje del:
+; <<>> DiG 9.11.3-1ubuntu1.13-Ubuntu <<>> www.liu.se , Dig verision och fråga som ställts.
+;; global options: +cmd  , uppenbart men de globala inställningarna som användes för kommandot.
+
+opcode: QUERY, frågan är av standars DNS query.
+status: NOERROR . lyckades och inga fel.
+id: 64544, id för DNS frågan.
+flags: qr rd ra ad . står för query response, recursion desired, recursion available. dessa är uppenbara vad de gör men inte ad, som  används av cache för att indikera att DNSSEC records har validerats.
+
+EDNS: version: 0 , anger versionen av Extension Mechanism for DNS.
+udp: 4096 , maxstorlek för UDP paketet (i bytes).
+www.liu.se. IN A. speciferar att en ipv4 adress i domänen.
+
+www.liu.se. 7882 IN A 130.236.18.52 , svarsdelen som anger vilken ip adress liu.se är kopplad till och dess TTL (7882).
+
+den sista delen är metadata som anger tid frågan tog att besvara, DNS servern som svarade, datum och tid och storlek på svaret.
+
+
+2.När du gör en query som till exempel dig ANY liu.se @ns4.liu.se kan du få flera olika sorters resource records (RR) tillbaka. Vad ska A-, AAAA-, NS-, MX- och SOA-records innehålla?
+
+  A-poster: Dessa kopplar ett domännamn till en IPv4-adress. Innehåller domännamn, ipv4 adress och TTL (valfritt). IPV4 kommer ha A som glue.
+  AAAA-poster: Liknar A-poster, men kopplar ett domännamn till en IPv6-adress. Samma som med förra fast istället AAAA som glue.
+  CNAME-poster: Används för att peka ett domännamn till ett annat domännamn istället för en IP-adress. Innehåller domännamn, måldomän och TTL.
+  MX-poster: Dirigerar e-posttrafik till rätt server. Innehåller domännamn, prioritet, mailserver och TTL.
+  SOA-posten: innehåller serie nummer, refresh, retry och expire time, min TTL och TTL (Time to live).
+
+
+1. Hur sätter man önskad DNS-server på Linux
+
+
+2. Vad är en SOA post? Vad innebär dess olika fält?
