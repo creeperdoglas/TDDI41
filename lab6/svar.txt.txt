@@ -51,6 +51,15 @@ den sista delen är metadata som anger tid frågan tog att besvara, DNS servern 
 
 
 1. Hur sätter man önskad DNS-server på Linux
-
+ändra i ` /etc/resolv. conf ` filen till att specifera din önskade DNS server.
 
 2. Vad är en SOA post? Vad innebär dess olika fält?
+SOA står för Start of Authority och alla DNS zoner börjar med en SOA record och SOA recorden anger att auktoritativen för en zon startar efter en punkt i det globala DNS trädet.
+SOA RECORD format:
+[Owner name] [SOA record TTL] SOA [MNAME] [RNAME] (
+  [Serial number]
+  [Refresh time in seconds]
+  [Retry time in seconds]
+  [Expire time in seconds]
+  [Minimum TTL (negative response cache TTL)]
+)
