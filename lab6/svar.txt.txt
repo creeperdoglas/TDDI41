@@ -14,6 +14,7 @@ Rekursiv slagning innebär att en DNS server gör rekursionen genom att forsätt
 I en iterativ kommer varje DNS query svara direkt till klienten med adressen till en annan DNS server att fråga, och klienten kommer fortsätta fråga DNS server på detta sätt tills en ger ett resultat på addressen i det givna domänen. En DNS fråga har en RD header (recursion decider) om RD header är 1 så ska den vara rekursiv om den är 0 ska det vara iterativt.
 
 5.I DNS delegerar vi ansvaret för olika zoner. Varför?
+För att öka skalbarhet genom att dela upp kan olika exempelvis universitet/organisation administrera sin egna zon. Sammanfattat gör det så att DNS systemet kan hantera en stor mängd domännamn och även underlättar administration. 
 
 
 6.Ovan beskriver vi hur man kommer fram till att liu.se har adressen 130.236.18.52 (och hela delegerings-hierarkin från root till auktoriteten för .se-domänen, till liu.se). Hur sker en uppslagning ''åt andra hållet'', där man vill slå upp om adressen 130.236.18.52 motsvarar någon webbadress (enligt din DNS-server)? Du kan vilja läsa om reverse DNS.
