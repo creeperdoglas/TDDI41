@@ -38,7 +38,7 @@ table inet filter {
         ct state established, related accept
         ip protocol icmp accept
         tcp dport 22 accept
-	if "lo" accept
+	iif "lo" accept
     }
 
     chain forward {
