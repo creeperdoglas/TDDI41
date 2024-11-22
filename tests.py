@@ -54,7 +54,7 @@ def test_reach_router(router_ip):
 
 # -------------------- Tests specifika till router --------------------
 
-def test_reach_external_ip(external_ip="10.0.2.2"):
+def test_reach_external_ip(external_ip="8.8.8.8"):
     """Check if the router can reach an external IP."""
     return ping_test(external_ip)
 
@@ -108,7 +108,7 @@ def run_tests(machine_name):
    
     config = machines[machine_name]
     router_ip = "10.0.0.1"  
-    external_ip = "10.0.2.2"  
+    external_ip = "8.8.8.8"  
 
     # kör
     print(f"Running tests for {machine_name}:")
