@@ -107,11 +107,11 @@ def test_dns_forward_query(hostname, fqdn, expected_ip):
     result = run_command(f"dig +short {fqdn}")
     return result.strip() == expected_ip
 
-def test_dns_reverse_query(ip, expected_hostname):
+def test_dns_reverse_query(ip, expected_fqdn):
     """Test DNS reverse lookup (IP to hostname)."""
     # Utför en reverse DNS-fråga med dig
     result = run_command(f"dig +short -x {ip}")
-    return result.strip() == expected_hostname
+    return result.strip() == expected_fqdn
 
 
 
@@ -139,7 +139,8 @@ def run_tests(machine_name):
             "expected_netmask": "255.255.255.0",
             "expected_gateway": "10.0.0.1",
             "expected_hostname": "server",
-            "expected_dns_server": "10.0.0.4"
+            "expected_dns_server": "10.0.0.4",
+            "expected_fqdn": "server.grupp13.liu.se"
         },
         "router": {
             "expected_ip": "10.0.0.1",
@@ -172,7 +173,7 @@ def run_tests(machine_name):
     
     router_reach_test = test_reach_router(router_ip)
     print(f" - Reach Router Test: {'Pass' if router_reach_test else 'Fail'}")
-    
+
     dns_server_used_test = test_dns_server_used(config["expected_dns_server"])
     print(f" - DNS Server Used Test: {'Pass' if dns_server_used_test else 'Fail'}")
 
@@ -207,7 +208,7 @@ def run_tests(machine_name):
         print(f" - Forward Lookup Test: {'Pass' if forward_query_test else 'Fail'}")
     
         # Testa reverse DNS-uppslag (IP → hostname)
-        reverse_query_test = test_dns_reverse_query("10.0.0.4", "server.grupp13.liu.se")
+        reverse_query_test = test_dns_reverse_query("10.0.0.4", config["expected_fqdn"])
         print(f" - Reverse Lookup Test: {'Pass' if reverse_query_test else 'Fail'}")
 
 
