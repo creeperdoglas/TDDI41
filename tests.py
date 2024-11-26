@@ -69,6 +69,52 @@ def test_ip_masquerading(interface="ens3"):
     masquerade_rule = f"oifname \"{interface}\" masquerade"
     return masquerade_rule in nft_output
 
+
+# -------------------- DNS Tests för alla--------------------
+#skrev i början endast att kolla i filen etc/resolv.conf för att kolla vilken nameserver är specifierad, detta är snyggare och bättre dock
+def test_dns_server_used(expected_dns_server):
+    """Check which DNS server is being used by performing a dig query."""
+    dig_output = run_command("dig +trace google.com")
+    return expected_dns_server in dig_output
+
+
+
+
+
+# -------------------- DNS Tests för server --------------------
+
+def test_dns_server_running():
+    """Check if the DNS server (named) is running."""
+    service_status = run_command("systemctl is-active named")
+    return service_status == "active"
+
+def test_dns_zone_files():
+    """Check if the DNS server has correct zone files."""
+    # Uppdaterade sökvägar för zonfiler
+    forward_zone = "/etc/bind/zones/db.grupp13.liu.se"
+    reverse_zone = "/etc/bind/zones/db.10.0.0"
+    
+    # Validera zonfiler med named-checkzone
+    forward_check = run_command(f"named-checkzone grupp13.liu.se {forward_zone}")
+    reverse_check = run_command(f"named-checkzone 0.0.10.in-addr.arpa {reverse_zone}")
+    
+    # Kontrollera om båda zonfilerna är giltiga
+    return "OK" in forward_check and "OK" in reverse_check
+
+def test_dns_forward_query(hostname, fqdn, expected_ip):
+    """Test DNS forward lookup (hostname to IP)."""
+    # Gör en DNS-fråga mot servern med dig
+    result = run_command(f"dig +short {fqdn}")
+    return result.strip() == expected_ip
+
+def test_dns_reverse_query(ip, expected_hostname):
+    """Test DNS reverse lookup (IP to hostname)."""
+    # Utför en reverse DNS-fråga med dig
+    result = run_command(f"dig +short -x {ip}")
+    return result.strip() == expected_hostname
+
+
+
 # -------------------- Main test function --------------------
 
 def run_tests(machine_name):
@@ -78,25 +124,29 @@ def run_tests(machine_name):
             "expected_ip": "10.0.0.2",
             "expected_netmask": "255.255.255.0",
             "expected_gateway": "10.0.0.1",
-            "expected_hostname": "client-1"
+            "expected_hostname": "client-1",
+            "expected_dns_server": "10.0.0.4"
         },
         "client-2": {
             "expected_ip": "10.0.0.3",
             "expected_netmask": "255.255.255.0",
             "expected_gateway": "10.0.0.1",
-            "expected_hostname": "client-2"
+            "expected_hostname": "client-2",
+            "expected_dns_server": "10.0.0.4"
         },
         "server": {
             "expected_ip": "10.0.0.4",
             "expected_netmask": "255.255.255.0",
             "expected_gateway": "10.0.0.1",
-            "expected_hostname": "server"
+            "expected_hostname": "server",
+            "expected_dns_server": "10.0.0.4"
         },
         "router": {
             "expected_ip": "10.0.0.1",
             "expected_netmask": "255.255.255.0",
             "expected_gateway": None, #router har ej en gateway
-            "expected_hostname": "gw"
+            "expected_hostname": "gw",
+            "expected_dns_server": "10.0.0.4"
         }
     }
 
@@ -123,6 +173,11 @@ def run_tests(machine_name):
     router_reach_test = test_reach_router(router_ip)
     print(f" - Reach Router Test: {'Pass' if router_reach_test else 'Fail'}")
     
+    dns_server_used_test = test_dns_server_used(config["expected_dns_server"])
+    print(f" - DNS Server Used Test: {'Pass' if dns_server_used_test else 'Fail'}")
+
+
+    
     # kör mer för router
     if machine_name == "router":
         print("\nRunning additional tests specific to the router:")
@@ -136,6 +191,24 @@ def run_tests(machine_name):
         masquerading_test = test_ip_masquerading()
         print(f" - IP Masquerading Test: {'Pass' if masquerading_test else 'Fail'}")
 
+    if machine_name == "server":
+        print("\nRunning additional tests specific to the DNS server:")
+    
+         # Testa om DNS-servern (named) körs
+        dns_running_test = test_dns_server_running()
+        print(f" - DNS Service Running Test: {'Pass' if dns_running_test else 'Fail'}")
+    
+         # Testa zonfilerna för forward och reverse DNS
+        dns_zone_test = test_dns_zone_files()
+        print(f" - DNS Zone Files Test: {'Pass' if dns_zone_test else 'Fail'}")
+    
+        # Testa forward DNS-uppslag (hostname → IP)
+        forward_query_test = test_dns_forward_query("server", "server.grupp13.liu.se", "10.0.0.4")
+        print(f" - Forward Lookup Test: {'Pass' if forward_query_test else 'Fail'}")
+    
+        # Testa reverse DNS-uppslag (IP → hostname)
+        reverse_query_test = test_dns_reverse_query("10.0.0.4", "server.grupp13.liu.se")
+        print(f" - Reverse Lookup Test: {'Pass' if reverse_query_test else 'Fail'}")
 
 
 if __name__ == "__main__":
