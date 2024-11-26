@@ -111,6 +111,9 @@ def test_dns_reverse_query(ip, expected_fqdn):
     """Test DNS reverse lookup (IP to hostname)."""
     # Utför en reverse DNS-fråga med dig
     result = run_command(f"dig +short -x {ip}")
+    #ta bort . . tror testet faila förut pga reverse alltid innehåller punkt i slutet? Snyggare att ta bort punkterna än att lägga in punkt i expected
+    result = result.strip().rstrip(".")
+    expected_fqdn = expected_fqdn.rstrip(".")
     return result.strip() == expected_fqdn
 
 
