@@ -1,0 +1,11 @@
+Vad betyder DIT och hur fungerar det?
+Directory Information Tree, det är träd av data entries I hierarkisk ordning.
+
+Vad betyder förkortningarna dn och dc och hur används de?
+Distinguished name och Domain component. dn används till att beskriva roten till ett objekt i katalogen. dc till att definiera domänens namnkomponenter och bygga upp hierakin.
+
+Vad är ett attribute?
+
+Vad är en "object class"?'
+
+Vad är det för skillnad mellan en "structural-" och en "auxiliary object class?
