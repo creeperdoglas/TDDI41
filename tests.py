@@ -97,6 +97,7 @@ def test_ip_masquerading(interface="ens3"):
 
 # -------------------- DNS Tests för alla--------------------
 #skrev i början endast att kolla i filen etc/resolv.conf för att kolla vilken nameserver är specifierad, detta är snyggare och bättre dock
+#kanske även borde ta bort +trace då trace visar den exakta vägen som tas men tar längre tid än bara dig, än så länge tar testfallen en acceptabel tid att kära dock.
 def test_dns_server_used(expected_dns_server):
     """Check which DNS server is being used by performing a dig query."""
     dig_output = run_command("dig +trace google.com")
