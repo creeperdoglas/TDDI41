@@ -58,12 +58,20 @@ def test_nftables_active():
     return nft_status == "active"
 
 def test_nftables_rules(expected_rules):
-    """Check if specific nftables rules are present."""
+    """
+    Check if all expected nftables rules are present.
+    Ignores extra rules.
+    """
+    #skrev generella reglerna så man kan köra på alla system och extra regler som finns ex i routern ej brys om.
     nft_output = run_command("nft list ruleset")
-    for rule in expected_rules:
-        if rule not in nft_output:
-            return False
+    missing_rules = [rule for rule in expected_rules if rule not in nft_output]
+    if missing_rules:
+        print("Missing rules:")
+        for rule in missing_rules:
+            print(f"  - {rule}")
+        return False
     return True
+
 
 
 # -------------------- Tests specifika till router --------------------
