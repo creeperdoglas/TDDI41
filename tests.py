@@ -52,6 +52,8 @@ def test_reach_router(router_ip):
     """Check if the machine can reach the router."""
     return ping_test(router_ip)
 
+# -------------------- Brandvägg Tests för alla--------------------
+
 def test_nftables_active():
     """Check if nftables is active."""
     nft_status = run_command("systemctl is-active nftables")
@@ -71,6 +73,7 @@ def test_nftables_rules(expected_rules):
             print(f"  - {rule}")
         return False
     return True
+
 
 
 
@@ -99,8 +102,25 @@ def test_dns_server_used(expected_dns_server):
     dig_output = run_command("dig +trace google.com")
     return expected_dns_server in dig_output
 
+#assistent sa att det kan vara bra att ha ett test som testar om ex client1 kan dig:a client2. gjort ett allmänt test nu.
+def test_dns_query_to_client2():
+    """
+    Test if the DNS query for client-2.grupp13.liu.se resolves to 10.0.0.3.
+    """
+    target_hostname = "client-2.grupp13.liu.se"
+    expected_ip = "10.0.0.3"
 
+    dig_output = run_command(f"dig +short {target_hostname}")
+    if not dig_output:
+        print(f"Error: DNS query for {target_hostname} returned no result.")
+        return False
 
+    # Kontrollera om resultatet innehåller förväntad IP-adress
+    if expected_ip in dig_output:
+        return True
+    else:
+        print(f"Error: DNS query for {target_hostname} returned {dig_output}, expected {expected_ip}.")
+        return False
 
 
 # -------------------- DNS Tests för server --------------------
@@ -195,6 +215,9 @@ def run_tests(machine_name):
     
     hostname_test = test_hostname(config["expected_hostname"])
     print(f" - Hostname Test: {'Pass' if hostname_test else 'Fail'}")
+
+    dns_client2_test = test_dns_query_to_client2()
+    print(f" - DNS Query to client-2 Test: {'Pass' if dns_client2_test else 'Fail'}")
     
     router_reach_test = test_reach_router(router_ip)
     print(f" - Reach Router Test: {'Pass' if router_reach_test else 'Fail'}")
@@ -229,6 +252,7 @@ def run_tests(machine_name):
         masquerading_test = test_ip_masquerading()
         print(f" - IP Masquerading Test: {'Pass' if masquerading_test else 'Fail'}")
 
+    #kör mer för server
     if machine_name == "server":
         print("\nRunning additional tests specific to the DNS server:")
     
