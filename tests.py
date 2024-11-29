@@ -62,7 +62,7 @@ def test_nftables_rules(expected_rules):
     Check if all expected nftables rules are present.
     Ignores extra rules.
     """
-    #skrev generella reglerna så man kan köra på alla system och extra regler som finns ex i routern ej brys om.
+    #bryr sig endast om de gemensamma reglerna då router har fler men detta är för att kunna köra på alla system, debug del i form av missing rules då fick fail på router.
     nft_output = run_command("nft list ruleset")
     missing_rules = [rule for rule in expected_rules if rule not in nft_output]
     if missing_rules:
@@ -206,9 +206,9 @@ def run_tests(machine_name):
     print(f" - nftables Active Test: {'Pass' if nft_active_test else 'Fail'}")
 
     expected_firewall_rules = [
-    'ct state established, related accept',  # Tillåt etablerade/relaterade anslutningar
+    'ct state established,related accept',  # Tillåt etablerade/relaterade anslutningar
     'ip protocol icmp accept',              # Tillåt ICMP (ping)
-    'iif lo accept',                        # Tillåt loopback-trafik
+    'iif "lo" accept',                        # Tillåt loopback-trafik, notera att "lo" är pga att det blir så när man använder nft list ruleset av någon anledning.
     'tcp dport 22 accept'                   # Tillåt SSH
     ]
     nft_rules_test = test_nftables_rules(expected_firewall_rules)
