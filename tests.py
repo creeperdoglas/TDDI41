@@ -52,6 +52,20 @@ def test_reach_router(router_ip):
     """Check if the machine can reach the router."""
     return ping_test(router_ip)
 
+def test_nftables_active():
+    """Check if nftables is active."""
+    nft_status = run_command("systemctl is-active nftables")
+    return nft_status == "active"
+
+def test_nftables_rules(expected_rules):
+    """Check if specific nftables rules are present."""
+    nft_output = run_command("nft list ruleset")
+    for rule in expected_rules:
+        if rule not in nft_output:
+            return False
+    return True
+
+
 # -------------------- Tests specifika till router --------------------
 
 def test_reach_external_ip(external_ip="8.8.8.8"):
@@ -179,6 +193,18 @@ def run_tests(machine_name):
 
     dns_server_used_test = test_dns_server_used(config["expected_dns_server"])
     print(f" - DNS Server Used Test: {'Pass' if dns_server_used_test else 'Fail'}")
+
+    nft_active_test = test_nftables_active()
+    print(f" - nftables Active Test: {'Pass' if nft_active_test else 'Fail'}")
+
+    expected_firewall_rules = [
+    'ct state established, related accept',  # Tillåt etablerade/relaterade anslutningar
+    'ip protocol icmp accept',              # Tillåt ICMP (ping)
+    'iif lo accept',                        # Tillåt loopback-trafik
+    'tcp dport 22 accept'                   # Tillåt SSH
+    ]
+    nft_rules_test = test_nftables_rules(expected_firewall_rules)
+    print(f" - nftables Rules Test: {'Pass' if nft_rules_test else 'Fail'}")
 
 
     
