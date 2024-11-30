@@ -5,7 +5,10 @@ Vad betyder förkortningarna dn och dc och hur används de?
 Distinguished name och Domain component. dn används till att beskriva roten till ett objekt i katalogen. dc till att definiera domänens namnkomponenter och bygga upp hierakin.
 
 Vad är ett attribute?
+Det är namngiva delar av en person, grupp eller organisation. varje attribute har en attribute type som ger olika typer av egenskaper.
 
 Vad är en "object class"?'
+De är till för att kunna indikera vilken typ av object som är representerad av en entry, och för att specificera vilka typer av attributes som skulle kunna vara inkluderade.
 
 Vad är det för skillnad mellan en "structural-" och en "auxiliary object class?
+En structural object class specificerar huvudtypen av objektetet, kan även få i arv av av andra structural eller abstracta object classes. En auxiliary object class ger information angående ytterligare egenskaper till en befintlig post utan att ändra dens grundläggande typ. Kan ärva från andra Auxiliary och abstracta obejct classes men inte från structural object classes.
