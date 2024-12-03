@@ -192,8 +192,6 @@ def test_getent_passwd():
 
 def test_ldapsearch():
     """Verify that LDAP search works."""
-    base_dn = "dc=grupp13,dc=liu,dc=se"
-    search_filter = "(objectClass=*)"
     command = "/usr/bin/ldapsearch -x -b 'dc=grupp13,dc=liu,dc=se' -LLL '(objectClass=*)'"
 
     
