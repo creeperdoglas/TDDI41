@@ -194,8 +194,23 @@ def test_ldapsearch():
     """Verify that LDAP search works."""
     base_dn = "dc=grupp13,dc=liu,dc=se"
     search_filter = "(objectClass=*)"
-    output = run_command(f"ldapsearch -x -b {base_dn} -LLL {search_filter}")
-    return bool(output)
+    command = f"ldapsearch -x -b {base_dn} -LLL {search_filter}"
+    
+    output = run_command(command)
+    #la till lite debugg, den funkade ej, så måste lista ut vad
+    if output is None or not output.strip():
+        print("Error: ldapsearch returned no output.")
+        return False
+
+    # Kontrollera om den förväntade DN finns i utdata
+    expected_dn = f"dc=grupp13,dc=liu,dc=se"
+    if expected_dn not in output:
+        print(f"Error: Expected DN '{expected_dn}' not found in ldapsearch output.")
+        print(f"ldapsearch output:\n{output}")
+        return False
+
+    return True
+
 
 
 
@@ -313,7 +328,8 @@ def run_tests(machine_name):
 
         ldapsearch_test = test_ldapsearch()
         print(f" - ldapsearch test: {'Pass' if ldapsearch_test else 'Fail'}")
-
+    
+    #för klienterna
     if machine_name in ["client-1", "client-2"]:
         print("\nRunning additional tests for the clients:")
 
