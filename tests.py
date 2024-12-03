@@ -194,7 +194,8 @@ def test_ldapsearch():
     """Verify that LDAP search works."""
     base_dn = "dc=grupp13,dc=liu,dc=se"
     search_filter = "(objectClass=*)"
-    command = f"ldapsearch -x -b {base_dn} -LLL {search_filter}"
+    command = "/usr/bin/ldapsearch -x -b 'dc=grupp13,dc=liu,dc=se' -LLL '(objectClass=*)'"
+
     
     output = run_command(command)
     #la till lite debugg, den funkade ej, så måste lista ut vad
