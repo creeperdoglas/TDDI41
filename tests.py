@@ -161,7 +161,7 @@ def test_dns_reverse_query(ip, expected_fqdn):
 
 
 # -------------------- LDAP tester --------------------
-def test_service_active(service_name = "nscld"):
+def test_service_active(service_name = "nslcd"):
     """Check if a specific service is active."""
     status = run_command(f"systemctl is-active {service_name}")
     return status == "active"
@@ -314,17 +314,18 @@ def run_tests(machine_name):
         ldapsearch_test = test_ldapsearch()
         print(f" - ldapsearch test: {'Pass' if ldapsearch_test else 'Fail'}")
 
-    if machine_name == "client-1" or "client-2":
-        print("\nRunning additional tests for the clients")
+    if machine_name in ["client-1", "client-2"]:
+        print("\nRunning additional tests for the clients:")
 
         service_active_test = test_service_active()
-        print(f" - nslcd active test: {'Pass' if service_active_test else 'Fail'}")
+        print(f" - nslcd Service Active Test: {'Pass' if service_active_test else 'Fail'}")
 
         nsswitch_ldap_test = test_nsswitch_ldap()
-        print(f" - nsswitch using ldap test: {'Pass' if nsswitch_ldap_test else 'Fail'}")
+        print(f" - NSSwitch Using LDAP Test: {'Pass' if nsswitch_ldap_test else 'Fail'}")
 
         getent_passwd_test = test_getent_passwd()
-        print(f" - getent finding user test: {'Pass' if getent_passwd_test else 'Fail'}")
+        print(f" - getent Finding User Test: {'Pass' if getent_passwd_test else 'Fail'}")
+
 
 
 if __name__ == "__main__":
