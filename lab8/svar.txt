@@ -1,0 +1,5 @@
+Varför NTP är stratifierat (har strata, som på engelska heter stratum)? Varför talar man inte bara direkt med någon referensserver?
+
+En NTP-klient brukar inte bara ändra systemklockan till en viss tid direkt, utan ökar/minskar hastigheten så att man når målet lite mjukare. Varför?
+
+Installera paketet ntp på er router. Kör ntpq -p och förklara vad de olika kolumnerna betyder, och hur man ska tolka att det finns flera rader i tabellen. Ta med utdata från kommandot.
