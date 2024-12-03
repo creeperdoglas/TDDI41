@@ -160,6 +160,44 @@ def test_dns_reverse_query(ip, expected_fqdn):
     return result.strip() == expected_fqdn
 
 
+# -------------------- LDAP tester --------------------
+def test_service_active(service_name = "nscld"):
+    """Check if a specific service is active."""
+    status = run_command(f"systemctl is-active {service_name}")
+    return status == "active"
+
+
+def test_nsswitch_ldap():
+    """Verify that NSS is configured to use LDAP for passwd, group, and shadow."""
+    try:
+        with open("/etc/nsswitch.conf", "r") as file:
+            config = file.read()
+        passwd_ldap = "passwd:         files ldap" in config
+        group_ldap = "group:          files ldap" in config
+        shadow_ldap = "shadow:         files ldap" in config
+        return passwd_ldap and group_ldap and shadow_ldap
+    except FileNotFoundError:
+        print("Error: /etc/nsswitch.conf not found!")
+        return False
+
+
+def test_getent_passwd():
+    """Verify that getent passwd returns LDAP users."""
+    output = run_command("getent passwd")
+    if not output:
+        print("Error: getent passwd returned no output.")
+        return False
+    return "melkergustafsson" in output  # känd user
+
+
+def test_ldapsearch():
+    """Verify that LDAP search works."""
+    base_dn = "dc=grupp13,dc=liu,dc=se"
+    search_filter = "(objectClass=*)"
+    output = run_command(f"ldapsearch -x -b {base_dn} -LLL {search_filter}")
+    return bool(output)
+
+
 
 # -------------------- Main test function --------------------
 
@@ -272,6 +310,21 @@ def run_tests(machine_name):
         # Testa reverse DNS-uppslag (IP → hostname)
         reverse_query_test = test_dns_reverse_query("10.0.0.4", config["expected_fqdn"])
         print(f" - Reverse Lookup Test: {'Pass' if reverse_query_test else 'Fail'}")
+
+        ldapsearch_test = test_ldapsearch()
+        print(f" - ldapsearch test: {'Pass' if ldapsearch_test else 'Fail'}")
+
+    if machine_name == "client-1" or "client-2":
+        print("\nRunning additional tests for the clients")
+
+        service_active_test = test_service_active()
+        print(f" - nslcd active test: {'Pass' if service_active_test else 'Fail'}")
+
+        nsswitch_ldap_test = test_nsswitch_ldap()
+        print(f" - nsswitch using ldap test: {'Pass' if nsswitch_ldap_test else 'Fail'}")
+
+        getent_passwd_test = test_getent_passwd()
+        print(f" - getent finding user test: {'Pass' if getent_passwd_test else 'Fail'}")
 
 
 if __name__ == "__main__":
