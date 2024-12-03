@@ -1,5 +1,7 @@
 Varför NTP är stratifierat (har strata, som på engelska heter stratum)? Varför talar man inte bara direkt med någon referensserver?
+stratum är en hiarirsk struktur av tidskällor för att distributera över nätverk. Genom att ha flera "lager" av server minskar risk att tidssynkronisering blir dålig om någon server blir otillgänglig.
 
 En NTP-klient brukar inte bara ändra systemklockan till en viss tid direkt, utan ökar/minskar hastigheten så att man når målet lite mjukare. Varför?
+för att gradvis justera (slewing) minskar risken för störningar i program som är tidskänsliga.
 
 Installera paketet ntp på er router. Kör ntpq -p och förklara vad de olika kolumnerna betyder, och hur man ska tolka att det finns flera rader i tabellen. Ta med utdata från kommandot.
