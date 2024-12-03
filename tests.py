@@ -172,8 +172,8 @@ def test_nsswitch_ldap():
     try:
         with open("/etc/nsswitch.conf", "r") as file:
             config = file.read()
-        passwd_ldap = "passwd:         files ldap" in config
-        group_ldap = "group:          files ldap" in config
+        passwd_ldap = "passwd:         files systemd ldap" in config
+        group_ldap = "group:          files systemd ldap" in config
         shadow_ldap = "shadow:         files ldap" in config
         return passwd_ldap and group_ldap and shadow_ldap
     except FileNotFoundError:
