@@ -430,7 +430,7 @@ def run_tests(machine_name):
         if not ntp_config_test:
             print(f"   NTP Config Output: {ntp_config_output}")
 
-        ntp_reachability_test, ntp_output = test_ntp_server_reachability(router_ip)
+        ntp_reachability_test, ntp_output = test_ntp_server_reachability("gw.grupp13.liu")
         print(f" - NTP Server Reachability: {'Pass' if ntp_reachability_test else 'Fail'}")
         if not ntp_reachability_test:
             print(f"   ntpq Output: {ntp_output}")
