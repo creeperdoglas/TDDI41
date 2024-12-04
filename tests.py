@@ -22,6 +22,8 @@ def ping_test(ip):
     command = f"ping -c 1 {ip}"
     return subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).returncode == 0
 
+
+
 # -------------------- Tests för alla --------------------
 
 def test_network_settings(expected_ip, expected_netmask, expected_gateway):
@@ -210,6 +212,58 @@ def test_ldapsearch():
 
     return True
 
+# -------------------- NTP helper functions--------------------
+def test_ntp_server_reachability(ntp_server_ip):
+    """Check if NTP server is reachable via ntpq."""
+    command = f"ntpq -p {ntp_server_ip}"
+    output = run_command(command)
+    return "* " in output, output  # '*' indikerar att servern används som primär källa
+
+def test_ntp_time_synchronization():
+    """Check if the system time is synchronized with the NTP server."""
+    output = run_command("timedatectl status")
+    return "System clock synchronized: yes" in output, output
+
+def test_ntp_delay_and_offset(ntp_server_ip):
+    """Check the delay and offset from the NTP server."""
+    command = f"ntpq -p {ntp_server_ip}"
+    output = run_command(command)
+    if not output:
+        return False, "No output from ntpq"
+
+    for line in output.splitlines():
+        if ntp_server_ip in line and "*" in line:
+            parts = line.split()
+            try:
+                delay = float(parts[7])
+                offset = float(parts[8])
+                return (delay < 100 and abs(offset) < 50), (delay, offset)
+            except (IndexError, ValueError):
+                return False, "Could not parse delay or offset"
+    return False, "No primary NTP server found"
+
+
+# -------------------- NTP tester för router --------------------
+def test_ntp_server_running():
+    """Check if the NTP server is running on the router."""
+    ntp_status = run_command("systemctl is-active ntp")
+    return ntp_status == "active"
+
+def test_ntp_firewall_rules():
+    """Check if the firewall allows NTP traffic."""
+    nft_output = run_command("nft list ruleset")
+    required_rules = [
+        'udp dport 123 accept',  # Tillåt NTP-trafik
+    ]
+    missing_rules = [rule for rule in required_rules if rule not in nft_output]
+    return not missing_rules, missing_rules
+
+
+# -------------------- NTP tester för klienter --------------------
+def test_client_ntp_configuration(expected_ntp_server_ip):
+    """Check if the client is configured to use the correct NTP server."""
+    output = run_command("cat /etc/ntp.conf")
+    return f"server {expected_ntp_server_ip}" in output, output
 
 
 
@@ -223,14 +277,16 @@ def run_tests(machine_name):
             "expected_netmask": "255.255.255.0",
             "expected_gateway": "10.0.0.1",
             "expected_hostname": "client-1",
-            "expected_dns_server": "10.0.0.4"
+            "expected_dns_server": "10.0.0.4",
+            "expected_ntp_server": "10.0.0.1"
         },
         "client-2": {
             "expected_ip": "10.0.0.3",
             "expected_netmask": "255.255.255.0",
             "expected_gateway": "10.0.0.1",
             "expected_hostname": "client-2",
-            "expected_dns_server": "10.0.0.4"
+            "expected_dns_server": "10.0.0.4",
+            "expected_ntp_server": "10.0.0.1"
         },
         "server": {
             "expected_ip": "10.0.0.4",
@@ -305,6 +361,21 @@ def run_tests(machine_name):
         masquerading_test = test_ip_masquerading()
         print(f" - IP Masquerading Test: {'Pass' if masquerading_test else 'Fail'}")
 
+        ntp_server_running = test_ntp_server_running()
+        print(f" - NTP Server Running: {'Pass' if ntp_server_running else 'Fail'}")
+
+        ntp_firewall_test, missing_rules = test_ntp_firewall_rules()
+        print(f" - NTP Firewall Rules: {'Pass' if ntp_firewall_test else 'Fail'}")
+        if not ntp_firewall_test:
+            print(f"   Missing Firewall Rules: {missing_rules}")
+
+        delay_offset_test, delay_offset_info = test_ntp_delay_and_offset(router_ip)
+        print(
+            f" - NTP Delay and Offset Test: {'Pass' if delay_offset_test else 'Fail'}"
+        )
+        if not delay_offset_test:
+            print(f"   Delay/Offset Info: {delay_offset_info}")
+
     #kör mer för server
     if machine_name == "server":
         print("\nRunning additional tests specific to the DNS server:")
@@ -340,6 +411,23 @@ def run_tests(machine_name):
 
         getent_passwd_test = test_getent_passwd()
         print(f" - getent Finding User Test: {'Pass' if getent_passwd_test else 'Fail'}")
+
+        ntp_config_test, ntp_config_output = test_client_ntp_configuration(
+            config["expected_ntp_server"]
+        )
+        print(f" - NTP Configuration Test: {'Pass' if ntp_config_test else 'Fail'}")
+        if not ntp_config_test:
+            print(f"   NTP Config Output: {ntp_config_output}")
+
+        ntp_reachability_test, ntp_output = test_ntp_server_reachability(router_ip)
+        print(f" - NTP Server Reachability: {'Pass' if ntp_reachability_test else 'Fail'}")
+        if not ntp_reachability_test:
+            print(f"   ntpq Output: {ntp_output}")
+
+        time_sync_test, timedate_output = test_ntp_time_synchronization()
+        print(f" - Time Synchronization Test: {'Pass' if time_sync_test else 'Fail'}")
+        if not time_sync_test:
+            print(f"   timedatectl Output: {timedate_output}")
 
 
 
