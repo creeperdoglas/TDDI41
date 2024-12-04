@@ -213,11 +213,18 @@ def test_ldapsearch():
     return True
 
 # -------------------- NTP helper functions--------------------
-def test_ntp_server_reachability(ntp_server_ip):
-    """Check if NTP server is reachable via ntpq."""
-    command = f"ntpq -p {ntp_server_ip}"
+def test_ntp_server_reachability(expected_ntp_server):
+    """Check if NTP server is reachable via ntpq and marked as primary."""
+    command = "ntpq -p"
     output = run_command(command)
-    return "* " in output, output  # '*' indikerar att servern används som primär källa
+    if not output:
+        return False, "No output from ntpq"
+
+    for line in output.splitlines():
+        if expected_ntp_server in line and "*" in line:
+            return True, f"Primary server found: {line}"
+
+    return False, f"No primary NTP server found for {expected_ntp_server}"
 
 def test_ntp_time_synchronization():
     """Check if the system time is synchronized with the NTP server."""
