@@ -224,6 +224,7 @@ def test_ntp_time_synchronization():
     output = run_command("timedatectl status")
     return "System clock synchronized: yes" in output, output
 
+#skrev om tester med debugg + mycket mer info för den faila när testades    
 def test_ntp_delay_and_offset(ntp_server_ip):
     """Check the delay and offset from the NTP server."""
     command = f"ntpq -p {ntp_server_ip}"
@@ -231,16 +232,28 @@ def test_ntp_delay_and_offset(ntp_server_ip):
     if not output:
         return False, "No output from ntpq"
 
+    print("Full ntpq output for debugging:")
+    print(output)  # För felsökning
+
+    primary_server_found = False
     for line in output.splitlines():
-        if ntp_server_ip in line and "*" in line:
+        if "*" in line:  # Leta efter primär server
+            primary_server_found = True
+            print(f"Primary server line: {line}")  # För felsökning
             parts = line.split()
             try:
                 delay = float(parts[7])
                 offset = float(parts[8])
-                return (delay < 100 and abs(offset) < 50), (delay, offset)
-            except (IndexError, ValueError):
-                return False, "Could not parse delay or offset"
-    return False, "No primary NTP server found"
+                # Validera värden
+                if delay < 100 and abs(offset) < 50:
+                    return True, f"Delay={delay}, Offset={offset}"
+                else:
+                    return False, f"Delay/Offset out of range: Delay={delay}, Offset={offset}"
+            except (IndexError, ValueError) as e:
+                return False, f"Could not parse delay or offset: {e}"
+
+    if not primary_server_found:
+        return False, "No primary NTP server found"
 
 
 # -------------------- NTP tester för router --------------------

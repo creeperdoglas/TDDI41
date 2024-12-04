@@ -86,7 +86,7 @@ server 2.se.pool.ntp.org iburst
 server 3.se.pool.ntp.org iburst
 
 # Access control
-restrict default kodeny nomodify nopeer noquery
+restrict default kodeny nomodify nopeer noquery		
 restrict -6 default kodeny nomodify nopeer noquery
 restrict 10.0.0.0 mask 255.255.255.0 nomodify notrap
 restrict 127.0.0.1
@@ -116,6 +116,6 @@ root@client-2:/# ntpq -p
 root@client-2:/# 
 
 
-detta visar att endast routern används som ntp. enligt kraven. jag använder mig av att explicit använda ntp servern och inte boradcast.
+detta visar att endast routern används som ntp. enligt kraven. jag använder mig av att explicit använda ntp servern och inte broadcast.
 
 
