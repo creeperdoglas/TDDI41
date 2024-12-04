@@ -5,3 +5,61 @@ En NTP-klient brukar inte bara ändra systemklockan till en viss tid direkt, uta
 för att gradvis justera (slewing) minskar risken för störningar i program som är tidskänsliga.
 
 Installera paketet ntp på er router. Kör ntpq -p och förklara vad de olika kolumnerna betyder, och hur man ska tolka att det finns flera rader i tabellen. Ta med utdata från kommandot.
+utdata:root@gw:/# ntpq -p
+     remote           refid      st t when poll reach   delay   offset  jitter
+==============================================================================
+ 0.debian.pool.n .POOL.          16 p    -   64    0    0.000   +0.000   0.001
+ 1.debian.pool.n .POOL.          16 p    -   64    0    0.000   +0.000   0.001
+ 2.debian.pool.n .POOL.          16 p    -   64    0    0.000   +0.000   0.001
+ 3.debian.pool.n .POOL.          16 p    -   64    0    0.000   +0.000   0.001
+#ntp3.flashdance 194.58.202.20    2 u   51   64    1    4.911   +6.031   0.845
++ntp.netnod.se   .PPS.            1 u   50   64    1   15.361   +5.405   1.471
+*sth1.ntp.netnod .PPS.            1 u   47   64    1    3.812   +4.290   2.306
++sth2.ntp.netnod .PPS.            1 u   45   64    1    4.001   +3.673   2.460
++ntp1.vmar.se    194.58.202.148   2 u   47   64    1    5.224   +4.413   2.179
++mmo2.ntp.netnod .PPS.            1 u   48   64    1    6.073   +4.411   2.215
+#mmo1.ntp.netnod .PPS.            1 u   45   64    1    6.303   +3.088   2.764
++svl1.ntp.netnod .PPS.            1 u   49   64    1    7.892   +4.780   1.849
++h-98-128-175-45 194.58.203.197   2 u   49   64    1   11.681   +4.649   1.941
++lul2.ntp.netnod .PPS.            1 u   49   64    1   14.321   +4.754   1.925
++ntp2.flashdance 193.11.166.52    2 u   48   64    1    4.106   +4.446   2.239
+#time.cloudflare 10.128.8.73      3 u   44   64    1    4.926   +2.489   2.749
+#time.cloudflare 10.128.8.73      3 u   46   64    1   96.991  -43.016  12.796
++192.36.143.134  .PPS.            1 u   46   64    1    4.049   +3.323   2.631
++time100.stupi.s .PPS.            1 u   47   64    1    3.948   +3.686   2.186
+#ntp3.hjelmenter 194.58.202.148   2 u   45   64    1    9.461   +3.632   2.463
+root@gw:/# 
+
+Remote: visar namnet eller IP-adressen för NTP-servern (peer) som systemet är anslutet till.
+* (asterisk): Den primära servern som används för tidssynkronisering.
++ (plus): Alternativa servrar som är tillgängliga och används för redundans.
+# (hash): Servrar som är tillgängliga men inte används just nu.
+
+refid: Referens-ID för tidskällan som servern använder.
+.PPS. indikerar att servern använder en mycket exakt källa, som en puls per sekund-signal (Pulse Per Second).
+
+st (stratum): Stratum-nivån anger serverns avstånd från en primär tidskälla,så 1 är primär källa och exempelvis 2 och 3 är avståndet från primär.
+
+t (type): anger typ av anslutning: 
+u: Unicast (direkt förfrågan till servern).
+l: Lokal klocka.
+b: Broadcast (server sänder tid till flera klienter).
+m: Multicast.
+
+when: tid i sekunder senaste kommunkation.
+
+poll: intervallet i sekunder mellan förfrågningar till servern.
+
+reach:
+En oktal (bas 8) representation av anslutningshistorik.tex 377 betyder att de senaste 8 försöken har varit framgångsrika.
+
+delay:
+uppenbart, tid i ms
+
+offset:
+Skillnaden mellan den lokala klockans tid och serverns tid
+
+jitter:
+Variation mellan efterföljande offset-mätningar. låga värden = stabilt
+
+Flera rader i tabellen representerar olika servrar som används för att få tid.
