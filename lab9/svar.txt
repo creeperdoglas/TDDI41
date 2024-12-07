@@ -11,6 +11,21 @@ Förklara vad kommandot mount -t ext3 /dev/sdb2 /mnt/media innebär
 mount används till att montera ett filsystem vid en given katalog i filsystemträdet. -t ext3 speciferar vilken filsystems-typ som partionen ska använda (ext3). /dev/sdb2/ är den specifika partionen som ska monteras. /mnt/media är den monteringspunkt där filsystemet ska bli tillgängligt.
 Så efter att ha kört kommandot kommer innehållet finnas i /dec/sdb2/ tillgängligt i katalogen /mnt/media och läsa och skriva filer som finns där.
 
+Vad står förkortningen RAID för?
+Redundant Array of Independent Disks.
+
+Förklara i grova drag hur RAID-0 fungerar
+Delar upp datan i mindre segment (stripes) och delar upp dessa segment över flera diskar. Fördel: läs och skrivprestandan förbättras då flera diskar arbetar samtidigt.
+Nackdel: Om en disk går sönder förloras all data på alla diskar.
+
+Förklara i grova drag hur RAID-1 fungerar
+En identisk kopia av datan lagras på två (eller fler) diskar. Fördelar: Om en disk går sönder finns fortarande en kopia på de andra diskarna. Alltså ingen data förloras. Läsoperationer går även snabbare då man kan läsa pararellt från de olika diskarna.
+Nackdel: skrivning måste göras på alla diskar samtidigt, vilket inte är lika snabbt som raid-0.
+
+Vad innebär kommandot mdadm --stop /dev/md0 ?
+Att man avbryter Raid funktionen på den speciferade enheten (md0). Diskarna som ingick i Raid förut återgår till att vara separata enheter i systemet.
+
+
 
 
 
