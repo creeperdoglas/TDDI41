@@ -1,0 +1,4 @@
+Vad är syftet med /etc/fstab?
+Vad används kommandot mke2fs (mkfs.ext{2..4}) till?
+Vad skriver kommandot df -h ut?
+Förklara vad kommandot mount -t ext3 /dev/sdb2 /mnt/media innebär
