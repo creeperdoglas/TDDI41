@@ -1,4 +1,48 @@
 Vad är syftet med /etc/fstab?
+Att innehålla information om vilka filsystem som ska monteras automatiskt vid systemstart.
+
 Vad används kommandot mke2fs (mkfs.ext{2..4}) till?
+att skapa ett nytt ext2,3 eller 4 filsystem på en dispartion eller virtuell diskfil.
+
 Vad skriver kommandot df -h ut?
+df (disk free) visar information om diskutrymme, -h står för human readable formaterar så det blir med läsbart (Ex, kb, mb och gb). Det kommandot skriver ut är hur mycket som används och är ledigt på varje filsystem. 
+
 Förklara vad kommandot mount -t ext3 /dev/sdb2 /mnt/media innebär
+mount används till att montera ett filsystem vid en given katalog i filsystemträdet. -t ext3 speciferar vilken filsystems-typ som partionen ska använda (ext3). /dev/sdb2/ är den specifika partionen som ska monteras. /mnt/media är den monteringspunkt där filsystemet ska bli tillgängligt.
+Så efter att ha kört kommandot kommer innehållet finnas i /dec/sdb2/ tillgängligt i katalogen /mnt/media och läsa och skriva filer som finns där.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
