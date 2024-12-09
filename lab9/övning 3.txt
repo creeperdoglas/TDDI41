@@ -1,0 +1,23 @@
+Konfigurera din server som en NFS-server (installera nödvändiga paket):
+apt-get install -y nfs-kernel-server
+
+
+Konfigurera din server så att den exporterar /usr/local till alla era klienter:
+lägger till i etc/exports 
+/usr/local 10.0.0.0/24(rw,sync,no_subtree_check)
+exportfs -a
+systemctl restart nfs-kernel-server
+lägger till I serverns etc/nftables.conf:
+ip saddr 10.0.0.0/24 tcp dport 2049 accept
+ip saddr 10.0.0.0/24 udp dport 2049 accept
+
+
+Konfigurera era klienter så att de statiskt monterar in /usr/local från er server vid uppstart. (Den lokala monteringspunkten behöver inte vara /usr/local)
+
+apt-get install -y nfs-common
+mkdir -p /mnt/local
+
+lägg till I etc/fstab :
+10.0.0.4:/usr/local    /mnt/local    nfs    defaults    0    0
+
+ser att usr/local på servern och mnt/local på klient har samma innehåll, detta visar att allt funkar som det ska :D

@@ -50,11 +50,16 @@ lvcreate -L 100M -n <lv_namn> <vg_namn>
 
 3.5:
 Vad är en automount map?
+En automount-map är en konfigurationsfil (eller flera filer) som används av autofs (automounter) för att dynamiskt montera filsystem när de efterfrågas och avmontera dem.
+
 Vilket paket behöver du installera för att använda automount?
+autofs
 
 Vad är det för skillnad på direkta och indirekta automount maps?
+Direkta automount maps definierar monteringspunkter som ligger direkt i filsystemträdet. När man refererar till den exakta sökvägen sker en automount. indirekta automount maps använder en "katalogprefix" under vilket flera "underkataloger" automonteras.
 
 Vad heter huvudkonfigurations-filen för automount? (Detta är inte samma sak som auto.master)
+/etc/autofs.conf
 
 
 
