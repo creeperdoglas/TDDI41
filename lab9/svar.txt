@@ -30,14 +30,23 @@ Att man avbryter Raid funktionen på den speciferade enheten (md0). Diskarna som
 3.3:
 
 Förklara följande begrepp: fysisk volym (PV: Physical Volume), volymgrupp (VG: Volume Group) och logisk volym (LV: Logical Volume) och hur de hänger ihop
+en fysisk volym är diskpartion som formaterats för att använda LVM. En volymgrupp består av en eller flera fysiska volymer som slås samman för att bilda en större pool av lagringsutrymme. En logisk volym skapas ur volymgruppens sammanlagda utrymme
+
 
 Vad är kommandot för att göra klart en fysisk volym för lvm?
+pvcreate /dev/sdX
 
 Vad är kommandot för att skapa en volymgrupp?
+vgcreate <test> /dev/sdX
+
 
 Vad är kommandot för att utöka en volymgrupp med ytterligare en PV?
+vgextend <test> /dev/sdY
+
 
 Hur skapar du en logisk volym på 100MB från en volymgrupp?
+lvcreate -L 100M -n <lv_namn> <vg_namn>
+
 
 3.5:
 Vad är en automount map?
