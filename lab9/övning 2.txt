@@ -1,0 +1,38 @@
+Installera lvm2:
+apt-get install -y lvm2
+
+Initiera/förbered /dev/md0 och /dev/md1 för anvädning i LVM. (detta kommer ta bort filsystemet du skapade på dom)
+blev tvungen att återskapa övning 1, då systemet vid restart döpte om till md126 och 7.
+pvcreate /dev/md0
+pvcreate /dev/md1
+
+Lägg till /dev/md0 till volymgruppen vgvirt
+vgcreate vgvirt /dev/md0
+
+Utöka volymgruppen vgvirt med /dev/md1
+vgextend vgvirt /dev/md1
+
+Skapa 2 logiska volymer lvvol1 och lvvol2
+lvcreate -n lvvol1 -L 10M vgvirt
+lvcreate -n lvvol2 -L 10M vgvirt
+
+
+Formatera dina nya logiska volymer med ett ext4 filsystem och se till att de monteras in vid boot under /home1 respektive /home2
+mkfs.ext4 /dev/vgvirt/lvvol1
+mkfs.ext4 /dev/vgvirt/lvvol2
+
+mkdir -p /home1
+mkdir -p /home2
+
+
+root@server:/dev#  blkid /dev/vgvirt/lvvol1
+/dev/vgvirt/lvvol1: UUID="af62ca64-0feb-48e6-9ba6-7c32b3a91cb6" BLOCK_SIZE="1024" TYPE="ext4"
+gör samma för lvvol2 och sparar uid för båda 
+
+lägger till 
+
+I etc/fstab
+UUID=af62ca64-0feb-48e6-9ba6-7c32b3a91cb6 /home1 ext4 defaults 0 2
+UUID=bf57d0fb-0ac3-41d0-9f47-cf53b2cafb05 /home2 ext4 defaults 0 2
+
+sedan mount -a
