@@ -1,3 +1,4 @@
+3.1:
 Vad är syftet med /etc/fstab?
 Att innehålla information om vilka filsystem som ska monteras automatiskt vid systemstart.
 
@@ -11,6 +12,7 @@ Förklara vad kommandot mount -t ext3 /dev/sdb2 /mnt/media innebär
 mount används till att montera ett filsystem vid en given katalog i filsystemträdet. -t ext3 speciferar vilken filsystems-typ som partionen ska använda (ext3). /dev/sdb2/ är den specifika partionen som ska monteras. /mnt/media är den monteringspunkt där filsystemet ska bli tillgängligt.
 Så efter att ha kört kommandot kommer innehållet finnas i /dec/sdb2/ tillgängligt i katalogen /mnt/media och läsa och skriva filer som finns där.
 
+3.2:
 Vad står förkortningen RAID för?
 Redundant Array of Independent Disks.
 
@@ -24,6 +26,26 @@ Nackdel: skrivning måste göras på alla diskar samtidigt, vilket inte är lika
 
 Vad innebär kommandot mdadm --stop /dev/md0 ?
 Att man avbryter Raid funktionen på den speciferade enheten (md0). Diskarna som ingick i Raid förut återgår till att vara separata enheter i systemet.
+
+3.3:
+
+Förklara följande begrepp: fysisk volym (PV: Physical Volume), volymgrupp (VG: Volume Group) och logisk volym (LV: Logical Volume) och hur de hänger ihop
+
+Vad är kommandot för att göra klart en fysisk volym för lvm?
+
+Vad är kommandot för att skapa en volymgrupp?
+
+Vad är kommandot för att utöka en volymgrupp med ytterligare en PV?
+
+Hur skapar du en logisk volym på 100MB från en volymgrupp?
+
+3.5:
+Vad är en automount map?
+Vilket paket behöver du installera för att använda automount?
+
+Vad är det för skillnad på direkta och indirekta automount maps?
+
+Vad heter huvudkonfigurations-filen för automount? (Detta är inte samma sak som auto.master)
 
 
 
