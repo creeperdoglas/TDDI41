@@ -98,7 +98,8 @@ broadcast 10.0.0.255
 restartar genom systemctl restart ntp , för ändringar att träda in 
 
 ändrar /etc/ntp.conf i klienter för att använda router:
-kommenterar ut och specifierar router till server så det ser ut så här: driftfile /var/lib/ntp/ntp.drift
+kommenterar ut och specifierar router till server så det ser ut så här: 
+driftfile /var/lib/ntp/ntp.drift
 leapfile /usr/share/zoneinfo/leap-seconds.list
 
 # Ange routern som NTP-server

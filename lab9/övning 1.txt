@@ -1,0 +1,42 @@
+Installera mdadm:
+apt-get install -y mdamd
+
+Skapa RAID-1 arrayen /dev/md0 av diskarna /dev/vda och /dev/vdb:
+mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/vda /dev/vdb
+cat /proc/mdstat ger:
+Personalities : [raid1] 
+md0 : active raid1 vdb[1] vda[0]
+      1046528 blocks super 1.2 [2/2] [UU]
+      [========>............]  resync = 42.8% (449472/1046528) finish=0.1min speed=49941K/sec
+      unused devices: <none>
+
+
+Skapa ett ext4 filsystem på /dev/md0:
+mkfs.ext4 /dev/md0
+
+Montera /dev/md0 under /mnt och verifiera storleken på disken:
+df -h /mnt ger
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md0        988M   24K  921M   1% /mnt
+
+Avmontera /dev/md0:
+umount /mnt
+
+Skapa RAID-0 arrayen /dev/md1 av diskarna /dev/vdc och /dev/vdd:
+mdadm --create /dev/md1 --level=0 --raid-devices=2 /dev/vdc /dev/vdd
+verifierar på samma sätt som förut med  cat /proc/mdstat
+
+
+Skapa ett ext4 filsystem på /dev/md1:
+mkfs.ext4 /dev/md1
+
+Montera /dev/md1 under /mnt och verifiera storleken på disken:
+mount /dev/md1 /mnt
+df -h /mnt ger:
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md1        2.0G   24K  1.9G   1% /mnt
+
+
+
+Avmontera /dev/md1:
+umount /mnt
