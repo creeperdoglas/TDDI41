@@ -1,0 +1,129 @@
+Skapa två nya test-användare, men flytta en användares hemkatalog till /home2/$USERNAME och den andra användarens hemkatalog till /home1/$USERNAME (du måste antagligen skapa katalogerna /home1 och /home2 först). Se till att inga hemkataloger finns kvar i /home. Ändra inte hemkatalogens plats i användardatabasen. När man frågar LDAP-databasen om var användarens hemkatalog ligger, ska det alltså stå /home/$USERNAME.
+Konfigurera din NFS-server för att uttryckligen exportera /home1 och /home2 med rätt behörigheter (läs/skriv-rättigheter, root_squash) till dina klienter (och endast dina klienter). Uttryckligen betyder att ni ska skriva ut det, även om det är default-värdet.:
+har två users redan, melkergustafsson och antonforsell. kommer använda dem. home1 och home2 finns redan från tidigare övning i servern, tar och använder dem.
+root@server:/# mkdir /home1/melkergustafsson
+root@server:/# chown 1001:1001 /home1/melkergustafsson
+root@server:/# chmod 700 home1/melkergustafsson/
+gör samma för antonforsell (uid 1002), använder uid då nss inte är uppsatt på servern.
+
+lägger till I /etc/exports
+/home1 10.0.0.0/24(rw,sync,no_subtree_check,root_squash)
+/home2 10.0.0.0/24(rw,sync,no_subtree_check,root_squash)'
+
+exportfs -a
+kollar om funkar med showmount -e (det gjorde de)
+
+
+
+
+
+Installera autofs på dina klienter och server.:
+apt-get install -y autofs
+
+
+Konfigurera autofs så att den monterar /home/$USERNAME från användarens hemkatalog på NFS-servern. Om användaren mytestuser har en hemkatalog där filerna ligger under /home2/mytestuser på servern, ska den monteras under /home/mytestuser på klienten. Gör /home till en indirekt monteringspunkt - det vill säga att automounter automatiskt monterar underkataloger för /home, men inte /home själv. Du behöver antagligen en post i LDAP per användare.
+Läs och följ förslagsvis Ubuntu-wikins AutofsLDAP-guide. I exempel-LDIF-filen, se på posten med dn cn=lionel,ou=auto.home,ou=automount,ou=admin,dc=example,dc=com. Fundera på vad mytestuser i exemplet ovan hade haft för värden på attribut och dn.:
+lägger till all automount + users så här: 
+
+ Organizational Unit för automount under users
+dn: ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
+ou: automount
+objectClass: top
+objectClass: organizationalUnit
+
+# Organizational Unit för auto.master under automount
+dn: ou=auto.master,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
+ou: auto.master
+objectClass: top
+objectClass: automountMap
+
+# Automount-map för /home
+dn: cn=/home,ou=auto.master,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
+cn: /home
+objectClass: top
+objectClass: automount
+automountInformation: ldap:ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se --timeout=60 --ghost
+
+# Organizational Unit för auto.home under automount och users
+dn: ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
+ou: auto.home
+objectClass: top
+objectClass: automountMap
+
+# Användarposter
+dn: uid=melkergustafsson,ou=users,dc=grupp13,dc=liu,dc=se
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Melker Gustafsson
+sn: Gustafsson
+uid: melkergustafsson
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/melkergustafsson
+loginShell: /bin/bash
+userPassword: 12345
+
+dn: uid=antonforsell,ou=users,dc=grupp13,dc=liu,dc=se
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Anton Forsell
+sn: Forsell
+uid: antonforsell
+uidNumber: 1002
+gidNumber: 1002
+homeDirectory: /home/antonforsell
+loginShell: /bin/bash
+userPassword: 12345
+
+# Automount-poster
+dn: cn=melkergustafsson,ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
+objectClass: automount
+objectClass: top
+cn: melkergustafsson
+automountInformation: -fstype=nfs,rw,sync,vers=4 server.grupp13.liu.se:/home1/melkergustafsson
+
+dn: cn=antonforsell,ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
+objectClass: automount
+objectClass: top
+cn: antonforsell
+automountInformation: -fstype=nfs,rw,sync,vers=4 server.grupp13.liu.se:/home2/antonforsell
+
+
+på server.
+
+skapar filen och tar mallen från https://launchpadlibrarian.net/55451730/autofs.ldif
+lägger till ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/ldap/schema/autofs-ldap.ldif
+
+sedan även
+
+
+på klienter:
+lägger till raderna 
+LOGGING="debug"
+MASTER_MAP_NAME="ou=auto.master,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se"
+LDAP_URI="ldap://server.grupp13.liu.se"
+SEARCH_BASE="ou=automount,ou=users,dc=grupp13,dc=liu,dc=se"
+MAP_OBJECT_CLASS="automountMap"
+ENTRY_OBJECT_CLASS="automount"
+MAP_ATTRIBUTE="ou"
+ENTRY_ATTRIBUTE="cn"
+VALUE_ATTRIBUTE="automountInformation"
+
+
+
+enligt ubuntu guide
+I etc/default/autofs
+
+
+lägger till automount:      files ldap 
+I etc/nsswitch.conf
+
+ändrar även etc/ldap/ldap.conf så pekar på min server (likadant som gjort tidigare i servern för ldap)
+
+
+Kontrollera att dina test-användare kan logga in och att deras hemkataloger monteras in korrekt:
+su - melkergustafsson
+mount | grep melkergustafsson
+
