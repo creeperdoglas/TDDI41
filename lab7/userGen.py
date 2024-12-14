@@ -45,31 +45,19 @@ def generate_password(length=12):
     return password
 
 def add_user(username, password):
-    print(f"Skapar användare {username}...")
+    print(f"Lägger till användare {username} i LDAP...")
     try:
-        subprocess.run(['useradd', '-m', '-s', '/bin/bash', username], check=True)
-        print(f"Användare {username} skapad.")
-
-        passwd_input = f'{username}:{password}'
-        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
-
-        print(f"Användare '{username}' har skapats med lösenord: {password}")
-
-        # Hämta användarens UID
-        uid_output = subprocess.run(['id', '-u', username], capture_output=True, text=True, check=True)
-        uid = uid_output.stdout.strip()
-
-        # Lägg till användaren i LDAP
-        print(f"Lägger till användare {username} i LDAP...")
+        # Skapa användare i LDAP med ldapscripts
         subprocess.run(['ldapadduser', username, 'users'], check=True)
         print(f"Användare {username} tillagd i LDAP.")
 
-        # Sätt lösenordet i LDAP
+        # Sätt lösenord för användaren i LDAP
         subprocess.run(['ldapscripts-passwd', username], input=password, text=True, check=True)
         print(f"Lösenord för användare {username} satt i LDAP.")
     except subprocess.CalledProcessError as e:
-        print(f"Fel uppstod när användaren {username} skapades: {e}")
+        print(f"Fel uppstod när användaren {username} hanterades i LDAP: {e}")
         sys.exit(1)
+
 
 def test_root_user_exists():
     if user_exists('root'):
