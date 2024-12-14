@@ -56,7 +56,7 @@ def add_user(username, password):
 
     try:
         password_input = f"{password}\n{password}\n"  # Skapa inmatning med lösenordet två gånger
-        subprocess.run(['setpasswd', username], input=password_input, text=True, check=True)
+        subprocess.run(['ldapsetpasswd', username], input=password_input, text=True, check=True)
         print(f"Lösenord för användare {username} satt i LDAP med setpasswd.")
     except subprocess.CalledProcessError as e:
         print(f"Fel vid sättande av lösenord för {username} med setpasswd: {e}")
