@@ -47,16 +47,30 @@ def generate_password(length=12):
 def add_user(username, password):
     print(f"Lägger till användare {username} i LDAP...")
     try:
-        # Skapa användare i LDAP med ldapscripts
+        # Skapa användare i LDAP
         subprocess.run(['ldapadduser', username, 'users'], check=True)
         print(f"Användare {username} tillagd i LDAP.")
-
-        # Sätt lösenord för användaren i LDAP
-        subprocess.run(['ldapscripts-passwd', username], input=password, text=True, check=True)
-        print(f"Lösenord för användare {username} satt i LDAP.")
     except subprocess.CalledProcessError as e:
-        print(f"Fel uppstod när användaren {username} hanterades i LDAP: {e}")
+        print(f"Fel vid skapande av användare {username}: {e}")
         sys.exit(1)
+
+    try:
+        # Sätt lösenord med ldapsetpasswd
+        subprocess.run(['ldapsetpasswd', username], input=password, text=True, check=True)
+        print(f"Lösenord för användare {username} satt i LDAP med ldapsetpasswd.")
+ 
+    except subprocess.CalledProcessError as e:
+        print(f"Fel vid sättande av lösenord för {username} med ldapsetpasswd: {e}")
+        sys.exit(1)
+
+    try:
+        # Sätt lösenord med setpasswd
+        subprocess.run(['setpasswd', username], input=password, text=True, check=True)
+        print(f"Lösenord för användare {username} satt i LDAP med setpasswd.")
+    except subprocess.CalledProcessError as e:
+        print(f"Fel vid sättande av lösenord för {username} med setpasswd: {e}")
+        sys.exit(1)
+
 
 
 def test_root_user_exists():
