@@ -51,27 +51,17 @@ def generate_password(length=12):
     return password
 
 def add_user(username, password):
-    print(f"Skapar användare {username} utan hemkatalog...")
+    print(f"Lägger till användare {username} i LDAP...")
     try:
-        # Skapa användarkonto utan hemkatalog
-        subprocess.run(['useradd', '-M', '-s', '/bin/bash', username], check=True)
-        print(f"Användare {username} skapad utan hemkatalog.")
-
-        # Sätt lösenord via pipe till chpasswd
-        passwd_input = f'{username}:{password}'
-        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
-        print(f"Användare '{username}' har skapats med lösenord: {password}")
-
-        # Lägg till användaren i LDAP
-        print(f"Lägger till användare {username} i LDAP...")
+        # Skapa användare i LDAP med ldapscripts
         subprocess.run(['ldapadduser', username, 'users'], check=True)
         print(f"Användare {username} tillagd i LDAP.")
 
-        # Sätt lösenord i LDAP
+        # Sätt lösenord för användaren i LDAP
         subprocess.run(['ldapscripts-passwd', username], input=password, text=True, check=True)
         print(f"Lösenord för användare {username} satt i LDAP.")
     except subprocess.CalledProcessError as e:
-        print(f"Fel uppstod när användaren {username} skapades: {e}")
+        print(f"Fel uppstod när användaren {username} hanterades i LDAP: {e}")
         sys.exit(1)
 
 """TESTFALL ENLIGT INTSTUKTIONER"""
