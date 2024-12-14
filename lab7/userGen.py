@@ -61,6 +61,8 @@ def add_user(username, password):
     except subprocess.CalledProcessError as e:
         print(f"Fel vid sättande av lösenord för {username} med setpasswd: {e}")
         sys.exit(1)
+    
+    print(f"Användare '{username}' har skapats med lösenord: {password}")
 
 
 def main():
