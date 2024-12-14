@@ -63,14 +63,6 @@ def add_user(username, password):
         print(f"Fel vid sättande av lösenord för {username} med ldapsetpasswd: {e}")
         sys.exit(1)
 
-    try:
-        # Sätt lösenord med setpasswd
-        subprocess.run(['setpasswd', username], input=password, text=True, check=True)
-        print(f"Lösenord för användare {username} satt i LDAP med setpasswd.")
-    except subprocess.CalledProcessError as e:
-        print(f"Fel vid sättande av lösenord för {username} med setpasswd: {e}")
-        sys.exit(1)
-
 
 
 def main():
