@@ -5,12 +5,6 @@ import string
 import subprocess
 import sys
 
-LDAP_BASE_DN = "dc=grupp13,dc=liu,dc=se"
-LDAP_USER_OU = "ou=users"
-LDAP_ADMIN_DN = "cn=admin," + LDAP_BASE_DN
-LDAP_PASSWORD_FILE = "/etc/ldapscripts/ldapscripts.passwd"  # Fil med lösenord för LDAP-bindning
-
-
 def generate_username(full_name):
     parts = full_name.split()
     if len(parts) >= 2:
@@ -21,7 +15,7 @@ def generate_username(full_name):
     username = ''.join(filter(str.isalnum, username))[:8]
 
     if not username.isascii():
-        print(f"Ogiltigt namn, felaktiga tecken i {full_name}, skapar slumpmässigt istället.")
+        print(f"Ogiltigt namn, felaktiga tecken i {full_name}, skapar slumpmässigt istället")
         username = generate_random_username()
 
     while user_exists(username):
@@ -30,11 +24,9 @@ def generate_username(full_name):
 
     return username
 
-
 def generate_random_username(length=8):
     letters_and_digits = string.ascii_lowercase + string.digits
     return ''.join(random.choices(letters_and_digits, k=length))
-
 
 def user_exists(username):
     try:
@@ -47,64 +39,61 @@ def user_exists(username):
         print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
         return False
 
-
 def generate_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
-    return ''.join(random.choices(characters, k=length))
+    password = ''.join(random.choices(characters, k=length))
+    return password
 
-
-def add_user_to_ldap(username, full_name, password):
-    print(f"Lägger till användare {username} i LDAP...")
-    uid_number = find_next_uid_number()
-    if not uid_number:
-        print("Kunde inte hitta nästa lediga UID-nummer.", file=sys.stderr)
-        sys.exit(1)
-
-    ldif = f"""
-dn: uid={username},{LDAP_USER_OU},{LDAP_BASE_DN}
-objectClass: inetOrgPerson
-objectClass: posixAccount
-objectClass: shadowAccount
-cn: {full_name}
-sn: {full_name.split()[-1]}
-uid: {username}
-uidNumber: {uid_number}
-gidNumber: {uid_number}
-homeDirectory: /home/{username}
-loginShell: /bin/bash
-userPassword: {password}
-    """
+def add_user(username, password):
+    print(f"Skapar användare {username}...")
     try:
-        result = subprocess.run(
-            ['ldapadd', '-D', LDAP_ADMIN_DN, '-y', LDAP_PASSWORD_FILE, '-H', 'ldap://localhost'],
-            input=ldif,
-            text=True,
-            check=True
-        )
-        print(f"Användare '{username}' har lagts till i LDAP.")
+        subprocess.run(['useradd', '-m', '-s', '/bin/bash', username], check=True)
+        print(f"Användare {username} skapad.")
+
+        passwd_input = f'{username}:{password}'
+        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
+
+        print(f"Användare '{username}' har skapats med lösenord: {password}")
+
+        # Hämta användarens UID
+        uid_output = subprocess.run(['id', '-u', username], capture_output=True, text=True, check=True)
+        uid = uid_output.stdout.strip()
+
+        # Lägg till användaren i LDAP
+        print(f"Lägger till användare {username} i LDAP...")
+        subprocess.run(['ldapadduser', username, 'users'], check=True)
+        print(f"Användare {username} tillagd i LDAP.")
+
+        # Sätt lösenordet i LDAP
+        subprocess.run(['ldapscripts-passwd', username], input=password, text=True, check=True)
+        print(f"Lösenord för användare {username} satt i LDAP.")
     except subprocess.CalledProcessError as e:
-        print(f"Fel uppstod när användaren {username} skulle läggas till i LDAP: {e}")
+        print(f"Fel uppstod när användaren {username} skapades: {e}")
         sys.exit(1)
 
+def test_root_user_exists():
+    if user_exists('root'):
+        print("Test 1: Användaren 'root' existerar - OK")
+    else:
+        print("Test 1: Användaren 'root' saknas - FAIL")
+        sys.exit(1)
 
-def find_next_uid_number(start_uid=1001):
-    # Sök efter nästa lediga UID
+def test_games_user_noshell():
     try:
-        result = subprocess.run(
-            ['ldapsearch', '-x', '-LLL', '-b', f'{LDAP_USER_OU},{LDAP_BASE_DN}', 'uidNumber'],
-            capture_output=True,
-            text=True
-        )
-        if result.returncode != 0:
-            print("Kunde inte hämta UID-nummer från LDAP.")
-            return None
-
-        uids = [int(line.split(': ')[1]) for line in result.stdout.splitlines() if line.startswith('uidNumber')]
-        return max(uids, default=start_uid - 1) + 1
+        shell = subprocess.run(['getent', 'passwd', 'games'], capture_output=True, text=True)
+        if shell.returncode == 0:
+            user_shell = shell.stdout.strip().split(':')[-1]
+            if user_shell in ['/usr/sbin/nologin', '/bin/false']:
+                print("Test 2: Användaren 'games' har inget giltigt skal - OK")
+            else:
+                print(f"Test 2: Användaren 'games' har ett giltigt skal ({user_shell}) - FAIL")
+                sys.exit(1)
+        else:
+            print("Test 2: Användaren 'games' finns inte - FAIL")
+            sys.exit(1)
     except Exception as e:
-        print(f"Ett fel uppstod vid sökning av UID-nummer: {e}")
-        return None
-
+        print(f"Fel vid kontroll av skal för användaren 'games': {e}")
+        sys.exit(1)
 
 def main():
     if len(sys.argv) != 2:
@@ -123,10 +112,11 @@ def main():
     for name in names:
         username = generate_username(name)
         password = generate_password()
-        add_user_to_ldap(username, name, password)
+        add_user(username, password)
 
-    print("\nAlla användare har lagts till i LDAP.")
-
+    print("\n-- Kör testerna --")
+    test_root_user_exists()
+    test_games_user_noshell()
 
 if __name__ == "__main__":
     main()
