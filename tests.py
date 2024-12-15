@@ -285,6 +285,48 @@ def test_client_ntp_configuration(expected_ntp_server_ip):
 
 
 
+# -------------------- NFS Server tester --------------------
+def test_usr_local_mounted_at_boot():
+    """Check if /usr/local is configured to be mounted at boot."""
+    try:
+        with open("/etc/fstab", "r") as file:
+            fstab_content = file.read()
+        return "/usr/local" in fstab_content
+    except FileNotFoundError:
+        print("Error: /etc/fstab not found!")
+        return False
+
+#testar både rättigheter + vilka klienter som exporteras till (båda då 10.0.0.0/24)
+def test_export_permissions(expected_permissions):
+    """
+    Check if directories are exported with the expected permissions.
+    """
+    exports_output = run_command("exportfs -v")
+    if not exports_output:
+        print("Error: exportfs returned no output.")
+        return False
+
+    missing_permissions = [
+        perm for perm in expected_permissions if perm not in exports_output
+    ]
+    if missing_permissions:
+        print(f"Missing export permissions: {missing_permissions}")
+        return False
+
+    return True
+
+def test_auto_master_ldap():
+    """Check if auto.master is configured to use LDAP."""
+    try:
+        with open("/etc/auto.master", "r") as file:
+            auto_master_content = file.read()
+        return "ldap:" in auto_master_content
+    except FileNotFoundError:
+        print("Error: /etc/auto.master not found!")
+        return False
+
+
+
 # -------------------- Main test function --------------------
 
 def run_tests(machine_name):
@@ -416,6 +458,26 @@ def run_tests(machine_name):
 
         ldapsearch_test = test_ldapsearch()
         print(f" - ldapsearch test: {'Pass' if ldapsearch_test else 'Fail'}")
+
+        print("\nRunning additional tests specific to the NFS server:")
+        
+        # Test för rättigheter på exporterade kataloger
+        expected_permissions = [
+        "/usr/local    	10.0.0.0/24(rw,wdelay,root_squash,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)",
+        "/home1        	10.0.0.0/24(rw,wdelay,root_squash,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)",
+        "/home2        	10.0.0.0/24(rw,wdelay,root_squash,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)"
+         ]
+
+        export_permissions_test = test_export_permissions(expected_permissions)
+        print(f" - Export Permissions Test: {'Pass' if export_permissions_test else 'Fail'}")
+
+        # Test för om /usr/local monteras vid boot
+        usr_local_boot_test = test_usr_local_mounted_at_boot()
+        print(f" - /usr/local Mounted at Boot Test: {'Pass' if usr_local_boot_test else 'Fail'}")
+
+        # Test för auto.master LDAP-konfiguration
+        auto_master_ldap_test = test_auto_master_ldap()
+        print(f" - auto.master LDAP Test: {'Pass' if auto_master_ldap_test else 'Fail'}")
     
     #för klienterna
     if machine_name in ["client-1", "client-2"]:
