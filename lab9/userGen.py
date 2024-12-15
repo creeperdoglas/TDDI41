@@ -77,7 +77,7 @@ automountInformation: {automount_info}
             'ldapadd',
             '-x',
             '-D', 'cn=admin,dc=grupp13,dc=liu,dc=se',  # Admin-DN
-            '-w', 'adminlösenord'                       # Admin-lösenord
+            '-w', 'mIssAn04'                       # Admin-lösenord
         ], input=ldif_content, text=True, check=True)
         print(f"Automount-poster för {username} uppdaterad.")
     except subprocess.CalledProcessError as e:
