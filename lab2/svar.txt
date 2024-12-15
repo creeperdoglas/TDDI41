@@ -1,0 +1,54 @@
+1.3:
+1.    1   Executable programs or shell commands
+       2   System calls (functions provided by the kernel)
+       3   Library calls (functions within program libraries)
+       4   Special files (usually found in /dev)
+       5   File formats and conventions, e.g. /etc/passwd
+       6   Games
+       7   Miscellaneous (including macro packages and conventions), e.g. man(7), groff(7) man-pages(7)
+       8   System administration commands (usually only for root)
+       9   Kernel routines [Non standard]
+2. ligger I User commands som ligger i sektion 1.
+1.4:
+1. kommandot är : journalctl | tail -n 5
+1.7:
+1. chown (nyägare) (filnamn)
+2.
+chmod u-x,g+x,o-x (filnamn) 
+chgrp groupname (filnamn)
+1.10:
+1. tar -xzf (filnamn) , x för extrahera, z för att säga att det är komprimerat och f för att specifera filnamn.
+2. tar -cJf (filnamn.tar.xz) (mappnamn)
+1.  inget första. Hej på andra
+2.  export PATH=$PATH:/courses/TDDI41
+3. först öppna konfigurationsfil med; nano ~/.bashrc , sedan lägger man in; export PATH=$PATH:/courses/TDDI41 och sparar och till slut laddar om shell med: source ~/.bashrc
+4. efter export LC_ALL=sv_SE.utf-8 och sedan man 1 ger ”no manual entry for 1”
+ 
+2.1
+1. systemctl list-units för aktiva + --all för alla
+2. systemctl restart sshd , funkar. kan dubbekolla om det faktiskt startades om genom systemctl status sshd
+2.3:
+1. ssh-keygen -t ed25519 -f ~/.ssh/id-sysadminkurs-ed25519 -C "sysadminkurs-key"
+-t för typen av nyckel
+-f för filnamn
+-C för kommentar till nyckel
+Sedan bara att upprepa lösenordet o så skapas nyckeln.
+2. ~/.ssh/id-sysadminkurs-ed25519.pub , för att se läg till cat i början
+3. I VM: lägg till ssh med mkdir -p /root/.ssh  och sedan nano /root/.ssh/authorized_keys och kopiera in din publika nyckel och spara.
+Lade även till rättigheter genom  chmod 700 /root/.ssh och
+chmod 600/root/.ssh/authorized keys , osäker om ett måste dock.
+sedan i lokala kopiera över:
+ssh-copy-id -i ~/.ssh/id-sysadminkurs-ed25519.pub -p 2220 root@127.0.0.1
+Sedan allt som behövs är: ssh root@127.0.0.1 -p 2220 utan lösenord
+Sedan så skapade jag en lätt skript genom nano ~/start-ssh-agent.sh  med innehållet:
+#!/bin/bash
+# Starta ssh-agent om det inte redan körs
+if ! pgrep -u "$USER" ssh-agent > /dev/null; then
+    eval "$(ssh-agent -s)"
+fi
+# Lägg till din SSH-nyckel
+ssh-add ~/.ssh/id-sysadminkurs-ed25519
+# SSH:a in i din VM
+ssh root@127.0.0.1 -p 2220
+sedan gör jag filen exekverbart med chmod +x start-ssh-agent.sh
+nu är det bara köra ./start-ssh-agent.sh i terminalen och skriva in min passkey password och så är jag inne :D
