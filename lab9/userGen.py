@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import random
 import string
 import subprocess
@@ -36,6 +37,20 @@ def user_exists(username):
     except Exception as e:
         print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
         return False
+
+
+def create_home_directory(home_directory, username):
+    full_path = os.path.join(home_directory, username)
+    try:
+        # Skapa katalogen
+        os.makedirs(full_path, exist_ok=True)
+        print(f"Hemkatalog {full_path} skapad.")
+        # Sätt ägare och rättigheter
+        subprocess.run(['chown', '-R', f'{username}:{username}', full_path], check=True)
+        print(f"Ägare och rättigheter satt för {full_path}.")
+    except Exception as e:
+        print(f"Fel vid skapande av hemkatalog {full_path}: {e}")
+        sys.exit(1)
 
 
 def add_user_to_ldap(username, password, home_directory):
@@ -84,8 +99,12 @@ automountInformation: {automount_info}
         print(f"Fel vid uppdatering av automount för {username}: {e}")
         sys.exit(1)
 
+    # Skapa hemkatalogen lokalt
+    create_home_directory(home_directory, username)
+
     print(f"Användare '{username}' har skapats med lösenord: {password}")
     print(f"Hemkatalog för användare '{username}' är: {home_directory}/{username}")
+
 
 def main():
     if len(sys.argv) != 2:
