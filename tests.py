@@ -286,6 +286,8 @@ def test_client_ntp_configuration(expected_ntp_server_ip):
 
 
 # -------------------- NFS Server tester --------------------
+
+#denna för klienter då den ska kolla om usr local är tillagt i etc/fstab
 def test_usr_local_mounted_at_boot():
     """Check if /usr/local is configured to be mounted at boot."""
     try:
@@ -471,10 +473,6 @@ def run_tests(machine_name):
         export_permissions_test = test_export_permissions(expected_permissions)
         print(f" - Export Permissions Test: {'Pass' if export_permissions_test else 'Fail'}")
 
-        # Test för om /usr/local monteras vid boot
-        usr_local_boot_test = test_usr_local_mounted_at_boot()
-        print(f" - /usr/local Mounted at Boot Test: {'Pass' if usr_local_boot_test else 'Fail'}")
-
         # Test för auto.master LDAP-konfiguration
         auto_master_ldap_test = test_auto_master_ldap()
         print(f" - auto.master LDAP Test: {'Pass' if auto_master_ldap_test else 'Fail'}")
@@ -508,6 +506,12 @@ def run_tests(machine_name):
         print(f" - Time Synchronization Test: {'Pass' if time_sync_test else 'Fail'}")
         if not time_sync_test:
             print(f"   timedatectl Output: {timedate_output}")
+
+        print("\nRunning additional tests specific to the NFS server:")
+        
+        # Test för om /usr/local monteras vid boot
+        usr_local_boot_test = test_usr_local_mounted_at_boot()
+        print(f" - /usr/local Mounted at Boot Test: {'Pass' if usr_local_boot_test else 'Fail'}")
 
 
 
