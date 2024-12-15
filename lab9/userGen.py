@@ -72,7 +72,13 @@ objectClass: top
 cn: {username}
 automountInformation: {automount_info}
 """
-        subprocess.run(['ldapadd'], input=ldif_content, text=True, check=True)
+        # Lägg till -x (enkel bindning), -D (admin-DN) och -w (lösenord)
+        subprocess.run([
+            'ldapadd',
+            '-x',
+            '-D', 'cn=admin,dc=grupp13,dc=liu,dc=se',  # Admin-DN
+            '-w', 'adminlösenord'                       # Admin-lösenord
+        ], input=ldif_content, text=True, check=True)
         print(f"Automount-poster för {username} uppdaterad.")
     except subprocess.CalledProcessError as e:
         print(f"Fel vid uppdatering av automount för {username}: {e}")
