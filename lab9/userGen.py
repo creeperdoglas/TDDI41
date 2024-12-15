@@ -37,32 +37,39 @@ def user_exists(username):
     except Exception as e:
         print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
         return False
-def get_user_ids(username):
+
+def get_uid_from_ldap(username):
+    """
+    Hämtar UID för en användare från LDAP efter att den har skapats.
+    """
     try:
-        # Använd `id -u` och `id -g` för att hämta UID och GID
-        uid = int(subprocess.check_output(['id', '-u', username]).strip())
-        gid = int(subprocess.check_output(['id', '-g', username]).strip())
-        return uid, gid
+        result = subprocess.run(
+            ['ldapsearch', '-x', '-b', 'ou=users,dc=grupp13,dc=liu,dc=se', f'(uid={username})', 'uidNumber'],
+            capture_output=True, text=True, check=True
+        )
+        for line in result.stdout.splitlines():
+            if line.startswith("uidNumber:"):
+                return int(line.split(":")[1].strip())
+        print(f"UID för användare {username} hittades inte.")
+        sys.exit(1)
     except subprocess.CalledProcessError as e:
-        print(f"Fel vid hämtning av UID/GID för {username}: {e}")
+        print(f"Fel vid hämtning av UID från LDAP för {username}: {e}")
         sys.exit(1)
 
-def create_home_directory(home_directory, username):
+def create_home_directory(home_directory, username, uid):
     full_path = os.path.join(home_directory, username)
     try:
-        # Skapa katalogen
         os.makedirs(full_path, exist_ok=True)
         print(f"Hemkatalog {full_path} skapad.")
 
-        # Hämta UID och GID för användaren
-        uid, gid = get_user_ids(username)
-
-        # Sätt ägare och rättigheter med UID:GID
-        subprocess.run(['chown', '-R', f'{uid}:{gid}', full_path], check=True)
-        print(f"Ägare och rättigheter satt för {full_path} med UID:GID {uid}:{gid}.")
+        # Sätt rättigheter med UID och GID (samma som UID här)
+        subprocess.run(['chown', '-R', f'{uid}:{uid}', full_path], check=True)
+        print(f"Ägare och rättigheter satt för {full_path} med UID:GID {uid}:{uid}.")
     except Exception as e:
         print(f"Fel vid skapande av hemkatalog {full_path}: {e}")
         sys.exit(1)
+
+
 
 
 
@@ -71,13 +78,14 @@ def add_user_to_ldap(username, password, home_directory):
 
     try:
         # Skapa användarpost i LDAP
-        subprocess.run([
-            'ldapadduser', username, 'users'
-        ], check=True)
+        subprocess.run(['ldapadduser', username, 'users'], check=True)
         print(f"Användare {username} tillagd i LDAP.")
     except subprocess.CalledProcessError as e:
         print(f"Fel vid skapande av användare {username} i LDAP: {e}")
         sys.exit(1)
+
+    # Hämta UID från LDAP
+    uid = get_uid_from_ldap(username)
 
     try:
         # Sätt lösenord
@@ -100,24 +108,22 @@ objectClass: top
 cn: {username}
 automountInformation: {automount_info}
 """
-        # Lägg till -x (enkel bindning), -D (admin-DN) och -w (lösenord)
         subprocess.run([
             'ldapadd',
             '-x',
-            '-D', 'cn=admin,dc=grupp13,dc=liu,dc=se',  # Admin-DN
-            '-w', 'mIssAn04'                       # Admin-lösenord
+            '-D', 'cn=admin,dc=grupp13,dc=liu,dc=se',
+            '-w', 'mIssAn04'
         ], input=ldif_content, text=True, check=True)
         print(f"Automount-poster för {username} uppdaterad.")
     except subprocess.CalledProcessError as e:
         print(f"Fel vid uppdatering av automount för {username}: {e}")
         sys.exit(1)
 
-    # Skapa hemkatalogen lokalt
-    create_home_directory(home_directory, username)
+    # Skapa hemkatalogen lokalt med den hämtade UID
+    create_home_directory(home_directory, username, uid)
 
     print(f"Användare '{username}' har skapats med lösenord: {password}")
     print(f"Hemkatalog för användare '{username}' är: {home_directory}/{username}")
-
 
 def main():
     if len(sys.argv) != 2:
