@@ -23,7 +23,8 @@ apt-get install -y autofs
 
 Konfigurera autofs så att den monterar /home/$USERNAME från användarens hemkatalog på NFS-servern. Om användaren mytestuser har en hemkatalog där filerna ligger under /home2/mytestuser på servern, ska den monteras under /home/mytestuser på klienten. Gör /home till en indirekt monteringspunkt - det vill säga att automounter automatiskt monterar underkataloger för /home, men inte /home själv. Du behöver antagligen en post i LDAP per användare.
 Läs och följ förslagsvis Ubuntu-wikins AutofsLDAP-guide. I exempel-LDIF-filen, se på posten med dn cn=lionel,ou=auto.home,ou=automount,ou=admin,dc=example,dc=com. Fundera på vad mytestuser i exemplet ovan hade haft för värden på attribut och dn.:
-lägger till all automount + users så här: 
+lägger till all automount + users så här:
+
 
  Organizational Unit för automount under users
 dn: ou=automount,ou=users,dc=grupp13,dc=liu,dc=se
@@ -117,7 +118,8 @@ enligt ubuntu guide
 I etc/default/autofs
 
 
-lägger till automount:      files ldap 
+lägger till
+automount:      files ldap 
 I etc/nsswitch.conf
 
 ändrar även etc/ldap/ldap.conf så pekar på min server (likadant som gjort tidigare i servern för ldap)
