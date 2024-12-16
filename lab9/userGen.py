@@ -7,6 +7,12 @@ import sys
 
 
 def generate_username(full_name):
+    # Kontrollera om namnet innehåller endast ASCII-tecken
+    if not full_name.isascii():
+        print(f"Ogiltigt namn med icke-ASCII-tecken: {full_name}. Skapar slumpmässigt användarnamn.")
+        return generate_random_username()
+
+    # Generera användarnamn baserat på namnet
     parts = full_name.split()
     if len(parts) >= 2:
         username = (parts[0][0] + parts[1]).lower()
@@ -24,6 +30,13 @@ def generate_username(full_name):
         username = original_username[:6] + suffix
 
     return username
+
+
+def generate_random_username(length=8):
+    """Generera ett slumpmässigt användarnamn."""
+    letters_and_digits = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(letters_and_digits, k=length))
+
 
 
 def ldap_user_exists(username):
