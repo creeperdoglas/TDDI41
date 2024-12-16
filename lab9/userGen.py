@@ -104,8 +104,6 @@ def add_user_to_ldap(username, password, home_directory):
         sys.exit(1)
 
     try:
-        with open('/etc/ldapscripts/ldapscripts.passwd', 'r') as secret_file:
-            ldap_password = secret_file.read().strip()  # 
         # Uppdatera automount-poster
         automount_dn = f"cn={username},ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se"
         automount_info = f"-fstype=nfs,rw,sync,vers=4 server.grupp13.liu.se:{home_directory}/{username}"
@@ -121,7 +119,7 @@ automountInformation: {automount_info}
             'ldapadd',
             '-x',
             '-D', 'cn=admin,dc=grupp13,dc=liu,dc=se',
-            '-w', ldap_password
+            '-w', 'mIssAn04'
         ], input=ldif_content, text=True, check=True)
         print(f"Automount-poster för {username} uppdaterad.")
     except subprocess.CalledProcessError as e:
