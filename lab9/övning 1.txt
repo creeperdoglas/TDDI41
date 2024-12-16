@@ -15,6 +15,8 @@ Skapa ett ext4 filsystem på /dev/md0:
 mkfs.ext4 /dev/md0
 
 Montera /dev/md0 under /mnt och verifiera storleken på disken:
+mount /dev/md0 /mnt
+
 df -h /mnt ger
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/md0        988M   24K  921M   1% /mnt
