@@ -15,11 +15,20 @@ def generate_username(full_name):
 
     username = ''.join(filter(str.isalnum, username))[:8]
 
+    if not username.isascii():
+        print(f"Ogiltigt namn, felaktiga tecken i {full_name}, skapar slumpmässigt istället.")
+        username = generate_random_username()
+
     while user_exists(username):
         suffix = ''.join(random.choices(string.digits, k=2))
         username = username[:6] + suffix
 
     return username
+
+
+def generate_random_username(length=8):
+    letters_and_digits = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(letters_and_digits, k=length))
 
 
 def generate_password(length=12):
@@ -37,6 +46,25 @@ def user_exists(username):
     except Exception as e:
         print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
         return False
+
+
+def add_user_locally(username, password):
+    """Skapa användaren lokalt i systemet med användarhanteringen från den andra koden."""
+    print(f"Skapar användare {username} lokalt...")
+    try:
+        # Skapa användarkonto lokalt
+        subprocess.run(['useradd', '-m', '-s', '/bin/bash', username], check=True)
+        print(f"Användare {username} skapad lokalt.")
+
+        # Sätt lösenord via pipe till chpasswd för säker hantering
+        passwd_input = f'{username}:{password}'
+        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
+
+        print(f"Användare '{username}' har skapats lokalt med lösenord: {password}")
+    except subprocess.CalledProcessError as e:
+        print(f"Fel uppstod när användaren {username} skapades lokalt: {e}")
+        sys.exit(1)
+
 
 def get_uid_from_ldap(username):
     """
@@ -56,6 +84,7 @@ def get_uid_from_ldap(username):
         print(f"Fel vid hämtning av UID från LDAP för {username}: {e}")
         sys.exit(1)
 
+
 def create_home_directory(home_directory, username, uid):
     full_path = os.path.join(home_directory, username)
     try:
@@ -68,9 +97,6 @@ def create_home_directory(home_directory, username, uid):
     except Exception as e:
         print(f"Fel vid skapande av hemkatalog {full_path}: {e}")
         sys.exit(1)
-
-
-
 
 
 def add_user_to_ldap(username, password, home_directory):
@@ -125,6 +151,7 @@ automountInformation: {automount_info}
     print(f"Användare '{username}' har skapats med lösenord: {password}")
     print(f"Hemkatalog för användare '{username}' är: {home_directory}/{username}")
 
+
 def main():
     if len(sys.argv) != 2:
         print(f"Användning: {sys.argv[0]} <fil med namn>", file=sys.stderr)
@@ -146,6 +173,10 @@ def main():
         # Välj hemkatalog slumpmässigt mellan /home1 och /home2
         home_directory = random.choice(['/home1', '/home2'])
 
+        # Skapa användaren lokalt först
+        add_user_locally(username, password)
+
+        # Lägg till användaren i LDAP
         add_user_to_ldap(username, password, home_directory)
 
 
