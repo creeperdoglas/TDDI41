@@ -31,15 +31,21 @@ def ldap_user_exists(username):
     try:
         result = subprocess.run(
             ['ldapsearch', '-x', '-b', 'ou=users,dc=grupp13,dc=liu,dc=se', f'(uid={username})'],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5
+            capture_output=True, text=True, timeout=5
         )
-        return result.returncode == 0
+        # Kontrollera om `dn: uid=<username>` finns i resultatet
+        if f"dn: uid={username}," in result.stdout:
+            print(f"Användare {username} hittades i LDAP.")
+            return True
+        print(f"Användare {username} hittades INTE i LDAP.")
+        return False
     except subprocess.TimeoutExpired:
         print(f"Timeout vid kontroll av användare: {username}")
         return False
     except Exception as e:
         print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
         return False
+
 
 
 def generate_password(length=12):
