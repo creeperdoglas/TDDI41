@@ -15,30 +15,24 @@ def generate_username(full_name):
 
     username = ''.join(filter(str.isalnum, username))[:8]
 
-    if not username.isascii():
-        print(f"Ogiltigt namn, felaktiga tecken i {full_name}, skapar slumpmässigt istället.")
-        username = generate_random_username()
-
-    while user_exists(username):
-        suffix = ''.join(random.choices(string.digits, k=2))
-        username = username[:6] + suffix
+    # Lägg till suffix om användarnamnet redan finns i LDAP
+    original_username = username
+    counter = 0
+    while ldap_user_exists(username):
+        counter += 1
+        suffix = f"{counter:02d}"  # Tvåsiffrigt suffix
+        username = original_username[:6] + suffix
 
     return username
 
 
-def generate_random_username(length=8):
-    letters_and_digits = string.ascii_lowercase + string.digits
-    return ''.join(random.choices(letters_and_digits, k=length))
-
-
-def generate_password(length=12):
-    characters = string.ascii_letters + string.digits + "!@#$%^&*()-_+="
-    return ''.join(random.choices(characters, k=length))
-
-
-def user_exists(username):
+def ldap_user_exists(username):
+    """Kontrollera om en användare redan finns i LDAP."""
     try:
-        result = subprocess.run(['id', username], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+        result = subprocess.run(
+            ['ldapsearch', '-x', '-b', 'ou=users,dc=grupp13,dc=liu,dc=se', f'(uid={username})'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5
+        )
         return result.returncode == 0
     except subprocess.TimeoutExpired:
         print(f"Timeout vid kontroll av användare: {username}")
@@ -48,22 +42,9 @@ def user_exists(username):
         return False
 
 
-def add_user_locally(username, password):
-    """Skapa användaren lokalt i systemet med användarhanteringen från den andra koden."""
-    print(f"Skapar användare {username} lokalt...")
-    try:
-        # Skapa användarkonto lokalt
-        subprocess.run(['useradd', '-m', '-s', '/bin/bash', username], check=True)
-        print(f"Användare {username} skapad lokalt.")
-
-        # Sätt lösenord via pipe till chpasswd för säker hantering
-        passwd_input = f'{username}:{password}'
-        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
-
-        print(f"Användare '{username}' har skapats lokalt med lösenord: {password}")
-    except subprocess.CalledProcessError as e:
-        print(f"Fel uppstod när användaren {username} skapades lokalt: {e}")
-        sys.exit(1)
+def generate_password(length=12):
+    characters = string.ascii_letters + string.digits + "!@#$%^&*()-_+="
+    return ''.join(random.choices(characters, k=length))
 
 
 def get_uid_from_ldap(username):
@@ -123,10 +104,8 @@ def add_user_to_ldap(username, password, home_directory):
         sys.exit(1)
 
     try:
-
         with open('/etc/ldapscripts/ldapscripts.passwd', 'r') as secret_file:
-            ldap_password = secret_file.read().strip()
-       
+            ldap_password = secret_file.read().strip()  # 
         # Uppdatera automount-poster
         automount_dn = f"cn={username},ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se"
         automount_info = f"-fstype=nfs,rw,sync,vers=4 server.grupp13.liu.se:{home_directory}/{username}"
@@ -177,10 +156,6 @@ def main():
         # Välj hemkatalog slumpmässigt mellan /home1 och /home2
         home_directory = random.choice(['/home1', '/home2'])
 
-        # Skapa användaren lokalt först
-        add_user_locally(username, password)
-
-        # Lägg till användaren i LDAP
         add_user_to_ldap(username, password, home_directory)
 
 
