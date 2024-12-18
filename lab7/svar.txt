@@ -11,4 +11,73 @@ Vad är en "object class"?'
 De är till för att kunna indikera vilken typ av object som är representerad av en entry, och för att specificera vilka typer av attributes som skulle kunna vara inkluderade.
 
 Vad är det för skillnad mellan en "structural-" och en "auxiliary object class?
-En structural object class specificerar huvudtypen av objektetet, kan även få i arv av av andra structural eller abstracta object classes. En auxiliary object class ger information angående ytterligare egenskaper till en befintlig post utan att ändra dens grundläggande typ. Kan ärva från andra Auxiliary och abstracta obejct classes men inte från structural object classes.
+En structural object class specificerar huvudtypen av objektetet, kan även få i arv av av andra structural eller abstrakta object classes. En auxiliary object class ger information angående ytterligare egenskaper till en befintlig post utan att ändra dens grundläggande typ. Kan ärva från andra Auxiliary och abstracka obejct classes men inte från structural object classes.
+
+
+Instruktioner:
+På server:
+Ladda ned genom  apt update
+ apt install slapd ldap-utils -y
+
+sedan dpkg-reconfigure slapd
+valde omredigara no, dns domän och org till grupp13.liu.se, valde nej på rensa och flytta gamla till ja. Första gången fick jag felmedellande med locale.
+Fixade genom dpkg-reconfigure locales valde utf8 sv_se och en_gb och en_us. Sedan update-locale LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8. Nu funkar det att köra dpkg-reconfigure slapd. 
+I efterhand så har jag märkt att detta endast var varningar att locale inte hittades och att det hade funkat bra utan att "fixa".
+
+I etc/ldap/ldap.conf lägger till
+BASE dc=grupp13,dc=liu,dc=se 
+URI ldap://server.grupp13.liu.se
+
+Kollar om det funkar genom : ldapsearch -x -LLL -H ldap:/// -b dc=grupp13,dc=liu,dc=se
+
+Updaterar brandväggen för att tillåta udp port 389
+
+På klienter:
+apt update
+apt install libnss-ldapd libpam-ldapd ldap-utils -y
+
+anger url ldap://server.grupp13.liu.se
+detta ger auto bas DN dc=grupp13,dc=liu,dc=se
+valde passwd, group, shadow för ldap lookup.
+
+La till regler I brandvägg att tcp dport 389 accept i filter för server och forwarding för router. Detta är för att ldap använder sig av port 389 om det är okrypterat vilket det är i det här fallet, annars hade det varit dport 636.
+
+Testar  i klient med ldapsearch -x -LLL -H ldap://server.grupp13.liu.se -b "dc=grupp13,dc=liu,dc=se" . Man kan nu se att ldap funkar som det ska. 
+
+Skapar en config mapp i ldap för att spara filer i. skapar en ou fil med 
+dn: ou=users,dc=grupp13,dc=liu,dc=se
+objectClass: organizationalUnit
+ou: users
+lägger till i ldap med ldapadd -x -D "cn=admin,dc=grupp13,dc=liu,dc=se" -W -f add_ou.ldif
+skapar en användare fil som ser ut såhär: 
+dn: uid=melkergustafsson,ou=users,dc=grupp13,dc=liu,dc=se
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+cn: Melker Gustafsson
+sn: Gustafsson
+uid: melkergustafsson
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/melkergustafsson
+loginShell: /bin/bash
+userPassword: 12345
+lägger till med ldapadd -x -D "cn=admin,dc=grupp13,dc=liu,dc=se" -W -f add_user.ldif
+verifierar att usern finns med ldapsearch -x -LLL -H ldap://localhost -b "dc=grupp13,dc=liu,dc=se" "uid=melkergustafsson"
+
+skapar manuellt en home directory till melkergustafsson genom mkdir och chown 
+nu funkar det att logga in på användaren med su – melkergustafsson
+
+Men laddar ned ldapscripts, lägger till detta i .conf filen: 
+
+SERVER="ldap://localhost"
+SUFFIX="dc=grupp13,dc=liu,dc=se" # Global suffix
+GSUFFIX="ou=groups"        # Groups ou (just under $SUFFIX)
+USUFFIX="ou=users"         # Users ou (just under $SUFFIX)
+BINDDN="cn=admin,dc=grupp13,dc=liu,dc=se"
+BINDPWDFILE="/etc/ldapscripts/ldapscripts.passwd"
+Fixar password med  echo -n 'password(byte ut mot riktiga pass)' | sudo tee /etc/ldapscripts/ldapscripts.passwd
+sudo chmod 400 /etc/ldapscripts/ldapscripts.passwd
+updaterar användarkskriptet från lab 4 (har infogats) och testar om det funkar med ldapsearch -x -LLL -b "ou=users,dc=grupp13,dc=liu,dc=se" 
+
+
