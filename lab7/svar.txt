@@ -64,6 +64,7 @@ loginShell: /bin/bash
 userPassword: 12345
 lägger till med ldapadd -x -D "cn=admin,dc=grupp13,dc=liu,dc=se" -W -f add_user.ldif
 verifierar att usern finns med ldapsearch -x -LLL -H ldap://localhost -b "dc=grupp13,dc=liu,dc=se" "uid=melkergustafsson"
+och getent passwd melkergustafsson visar även det att usern finns.
 
 skapar manuellt en home directory till melkergustafsson genom mkdir och chown 
 nu funkar det att logga in på användaren med su – melkergustafsson
@@ -79,5 +80,7 @@ BINDPWDFILE="/etc/ldapscripts/ldapscripts.passwd"
 Fixar password med  echo -n 'password(byte ut mot riktiga pass)' | sudo tee /etc/ldapscripts/ldapscripts.passwd
 sudo chmod 400 /etc/ldapscripts/ldapscripts.passwd
 updaterar användarkskriptet från lab 4 (har infogats) och testar om det funkar med ldapsearch -x -LLL -b "ou=users,dc=grupp13,dc=liu,dc=se" 
+
+nsswitch filen kommer innehålla ldap automatiskt (för group, shadow och passwd) från att ha valt under nedladdningen. 
 
 
