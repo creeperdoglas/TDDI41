@@ -7,6 +7,12 @@ import sys
 
 
 def generate_username(full_name):
+    # Kontrollera om namnet innehåller endast ASCII-tecken
+    if not full_name.isascii():
+        print(f"Ogiltigt namn med icke-ASCII-tecken: {full_name}. Skapar slumpmässigt användarnamn.")
+        return generate_random_username()
+
+    # Generera användarnamn baserat på namnet
     parts = full_name.split()
     if len(parts) >= 2:
         username = (parts[0][0] + parts[1]).lower()
@@ -15,28 +21,47 @@ def generate_username(full_name):
 
     username = ''.join(filter(str.isalnum, username))[:8]
 
-    while user_exists(username):
-        suffix = ''.join(random.choices(string.digits, k=2))
-        username = username[:6] + suffix
+    # Lägg till suffix om användarnamnet redan finns i LDAP
+    original_username = username
+    counter = 0
+    while ldap_user_exists(username):
+        counter += 1
+        suffix = f"{counter:02d}"  # Tvåsiffrigt suffix
+        username = original_username[:6] + suffix
 
     return username
 
 
-def generate_password(length=12):
-    characters = string.ascii_letters + string.digits + "!@#$%^&*()-_+="
-    return ''.join(random.choices(characters, k=length))
+def generate_random_username(length=8):
+    """Generera ett slumpmässigt användarnamn."""
+    letters_and_digits = string.ascii_lowercase + string.digits
+    return ''.join(random.choices(letters_and_digits, k=length))
 
 
-def user_exists(username):
+def ldap_user_exists(username):
+    """Kontrollera om en användare redan finns i LDAP."""
     try:
-        result = subprocess.run(['id', username], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
-        return result.returncode == 0
+        result = subprocess.run(
+            ['ldapsearch', '-x', '-b', 'ou=users,dc=grupp13,dc=liu,dc=se', f'(uid={username})'],
+            capture_output=True, text=True, timeout=5
+        )
+        if f"dn: uid={username}," in result.stdout:
+            print(f"Användare {username} hittades i LDAP.")
+            return True
+        print(f"Användare {username} hittades INTE i LDAP.")
+        return False
     except subprocess.TimeoutExpired:
         print(f"Timeout vid kontroll av användare: {username}")
         return False
     except Exception as e:
         print(f"Ett fel uppstod vid kontroll av användare {username}: {e}")
         return False
+
+
+def generate_password(length=12):
+    characters = string.ascii_letters + string.digits + "!@#$%^&*()-_+="
+    return ''.join(random.choices(characters, k=length))
+
 
 def get_uid_from_ldap(username):
     """
@@ -56,22 +81,6 @@ def get_uid_from_ldap(username):
         print(f"Fel vid hämtning av UID från LDAP för {username}: {e}")
         sys.exit(1)
 
-def create_home_directory(home_directory, username, uid):
-    full_path = os.path.join(home_directory, username)
-    try:
-        os.makedirs(full_path, exist_ok=True)
-        print(f"Hemkatalog {full_path} skapad.")
-
-        # Sätt rättigheter med UID och GID (samma som UID här)
-        subprocess.run(['chown', '-R', f'{uid}:{uid}', full_path], check=True)
-        print(f"Ägare och rättigheter satt för {full_path} med UID:GID {uid}:{uid}.")
-    except Exception as e:
-        print(f"Fel vid skapande av hemkatalog {full_path}: {e}")
-        sys.exit(1)
-
-
-
-
 
 def add_user_to_ldap(username, password, home_directory):
     print(f"Lägger till användare {username} i LDAP...")
@@ -88,7 +97,7 @@ def add_user_to_ldap(username, password, home_directory):
     uid = get_uid_from_ldap(username)
 
     try:
-        # Sätt lösenord
+        # Sätt lösenord i LDAP
         password_input = f"{password}\n{password}\n"
         subprocess.run(['ldapsetpasswd', username], input=password_input, text=True, check=True)
         print(f"Lösenord för användare {username} satt i LDAP.")
@@ -96,8 +105,22 @@ def add_user_to_ldap(username, password, home_directory):
         print(f"Fel vid sättande av lösenord för {username}: {e}")
         sys.exit(1)
 
+    # Nu skapar vi samma användare lokalt med samma UID och hemkatalog
     try:
-        # Uppdatera automount-poster
+        print(f"Skapar användare {username} lokalt med UID {uid}...")
+        subprocess.run(['useradd', '-m', '-u', str(uid), '-s', '/bin/bash', '-d', f"{home_directory}/{username}", username], check=True)
+        # Sätt det lokala lösenordet
+        passwd_input = f'{username}:{password}'
+        subprocess.run(['chpasswd'], input=passwd_input, text=True, check=True)
+        print(f"Lokal användare {username} skapad med UID {uid} och lösenord satt.")
+    except subprocess.CalledProcessError as e:
+        print(f"Fel vid skapande av lokal användare {username}: {e}")
+        sys.exit(1)
+
+    # Uppdatera automount-poster i LDAP för att peka hemkatalogen till NFS
+    try:
+        with open('/etc/ldapscripts/ldapscripts.passwd', 'r') as secret_file:
+            ldap_password = secret_file.read().strip()
         automount_dn = f"cn={username},ou=auto.home,ou=automount,ou=users,dc=grupp13,dc=liu,dc=se"
         automount_info = f"-fstype=nfs,rw,sync,vers=4 server.grupp13.liu.se:{home_directory}/{username}"
 
@@ -112,18 +135,16 @@ automountInformation: {automount_info}
             'ldapadd',
             '-x',
             '-D', 'cn=admin,dc=grupp13,dc=liu,dc=se',
-            '-w', 'mIssAn04'
+            '-w', ldap_password
         ], input=ldif_content, text=True, check=True)
         print(f"Automount-poster för {username} uppdaterad.")
     except subprocess.CalledProcessError as e:
         print(f"Fel vid uppdatering av automount för {username}: {e}")
         sys.exit(1)
 
-    # Skapa hemkatalogen lokalt med den hämtade UID
-    create_home_directory(home_directory, username, uid)
-
-    print(f"Användare '{username}' har skapats med lösenord: {password}")
+    print(f"Användare '{username}' har skapats i både LDAP och lokalt med lösenord: {password}")
     print(f"Hemkatalog för användare '{username}' är: {home_directory}/{username}")
+
 
 def main():
     if len(sys.argv) != 2:
@@ -150,4 +171,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
