@@ -1,0 +1,23 @@
+installera: apt install paketnamn
+Ta bort: apt remove paketnamn
+Ta bort på riktigt: apt purge paketnamn
+Uppdatera: apt update && apt upgrade
+ 
+hur ser man vilka filer som ett paket tillhandahåller?
+dpkg -L paketnam
+hur ser man vilket paket som tillhandahåller en fil?
+dpkg -S /sökväg/till/fil
+ 
+2.
+sudo apt install cowsay
+dpkg -l | grep cowsay
+cowsay "Hello world"
+sudo apt remove cowsay
+sudo apt purge cowsay
+3.
+ 
+Hur lägger man till ett nytt repo?
+echo "deb http://example.com/ubuntu focal main" | sudo tee /etc/apt/sources.list.d/example.list
+Hur tar man bort ett repo?
+sudo rm /etc/apt/sources.list.d/example.list
+ 
