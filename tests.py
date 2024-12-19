@@ -333,7 +333,7 @@ def test_auto_master_ldap():
         return False
 
 #assistent bad om att lägga till test för brandvägg
-def test_nftables_rules():
+def test_nftables_rules_server():
     """Kontrollera att specifika regler finns i /etc/nftables.conf."""
     expected_rules = [
         "ip saddr 10.0.0.0/24 tcp dport 2049 accept",
@@ -509,8 +509,8 @@ def run_tests(machine_name):
         auto_master_ldap_test = test_auto_master_ldap()
         print(f" - auto.master LDAP Test: {'Pass' if auto_master_ldap_test else 'Fail'}")
 
-        nftables_test_rules = test_nftables_rules()
-        print(f" - NFTables Rule Test: {'Pass' if nftables_test_rules else 'Fail'}")
+        nftables_server_test_rules = test_nftables_rules_server()
+        print(f" - NFTables Rule Test: {'Pass' if nftables_server_test_rules else 'Fail'}")
 
     
     #för klienterna
