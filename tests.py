@@ -168,6 +168,11 @@ def test_service_active(service_name = "nslcd"):
     status = run_command(f"systemctl is-active {service_name}")
     return status == "active"
 
+def test_service_active_slapd(service_name = "slapd"):
+    """Check if a specific service is active."""
+    status = run_command(f"systemctl is-active {service_name}")
+    return status == "active"
+
 
 def test_nsswitch_ldap():
     """Verify that NSS is configured to use LDAP for passwd, group, and shadow."""
@@ -327,6 +332,30 @@ def test_auto_master_ldap():
         print("Error: /etc/auto.master not found!")
         return False
 
+#assistent bad om att lägga till test för brandvägg
+def test_nftables_rules():
+    """Kontrollera att specifika regler finns i /etc/nftables.conf."""
+    expected_rules = [
+        "ip saddr 10.0.0.0/24 tcp dport 2049 accept",
+        "ip saddr 10.0.0.0/24 udp dport 2049 accept",
+        "ip saddr 10.0.0.0/24 tcp dport 110 accept",
+        "ip saddr 10.0.0.0/24 udp dport 110 accept",
+    ]
+
+    try:
+        with open("/etc/nftables.conf", "r") as file:
+            config = file.read()
+
+        missing_rules = [rule for rule in expected_rules if rule not in config]
+        if missing_rules:
+            print(f"Följande regler saknas i /etc/nftables.conf: {missing_rules}")
+            return False
+
+        return True
+
+    except FileNotFoundError:
+        print("Filen /etc/nftables.conf hittades inte!")
+        return False
 
 
 # -------------------- Main test function --------------------
@@ -461,6 +490,9 @@ def run_tests(machine_name):
         ldapsearch_test = test_ldapsearch()
         print(f" - ldapsearch test: {'Pass' if ldapsearch_test else 'Fail'}")
 
+        slapd_service_active_test = test_service_active_slapd()
+        print(f" - nslcd Service Active Test: {'Pass' if slapd_service_active_test else 'Fail'}")
+
         print("\nRunning additional tests specific to the NFS server:")
         
         # Test för rättigheter på exporterade kataloger
@@ -476,6 +508,10 @@ def run_tests(machine_name):
         # Test för auto.master LDAP-konfiguration
         auto_master_ldap_test = test_auto_master_ldap()
         print(f" - auto.master LDAP Test: {'Pass' if auto_master_ldap_test else 'Fail'}")
+
+        nftables_test_rules = test_nftables_rules()
+        print(f" - NFTables Rule Test: {'Pass' if nftables_test_rules else 'Fail'}")
+
     
     #för klienterna
     if machine_name in ["client-1", "client-2"]:
