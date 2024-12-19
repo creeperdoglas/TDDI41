@@ -63,3 +63,65 @@ SOA RECORD format:
   [Expire time in seconds]
   [Minimum TTL (negative response cache TTL)]
 )
+
+labb genomgång: 
+
+Ändra i /etc/resolv.conf till:
+nameserver 10.0.0.4
+
+måste även i brandväggen tillägga udp dport 53 accept;
+
+I etc/bind/named.conf.local
+skapar zonerna för forward och reverse av typ master och länkar till filerna med soa posterna.
+skapar en mapp som heter zones i bind, sedan varsin fil för varje soa post.
+forward:
+
+$TTL    3600
+@       IN      SOA     server.grupp13.liu.se. admin.grupp13.liu.se. (
+                        2024112101
+                        3600
+                        1800
+                        1209600
+                        3600 )
+
+        IN      NS      server.grupp13.liu.se.
+
+server  IN      A       10.0.0.4
+gw      IN      A       10.0.0.1
+client-1 IN     A       10.0.0.2
+client-2 IN     A       10.0.0.3
+
+reverse:
+
+TTL    3600
+@       IN      SOA     server.grupp13.liu.se. admin.grupp13.liu.se. (
+                        2024112602
+                        3600
+                        1800
+                        12096000
+                        3600 )
+
+        IN      NS      server.grupp13.liu.se.
+
+1       IN      PTR     gw.grupp13.liu.se.
+2       IN      PTR     client-1.grupp13.liu.se.
+3       IN      PTR     client-2.grupp13.liu.se.
+4       IN      PTR     server.grupp13.liu.se.
+
+
+
+
+Ändrar för cache och bla recursion endast inom nätverket i etc/bind/named.conf.options till:
+ 
+directory "/var/cache/bind";
+
+        recursion yes;
+        allow-query { 10.0.0.0/24; };
+        allow-recursion { 10.0.0.0/24; };
+
+sedan la jag även till forwarders till goggle och cloudflares ip.
+
+
+
+
+
