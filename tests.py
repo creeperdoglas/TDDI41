@@ -217,6 +217,21 @@ def test_ldapsearch():
 
     return True
 
+#brandvägg för server: 
+def test_ldap_firewall_rules():
+    """Check if the firewall allows LDAP traffic on TCP and UDP port 389."""
+    nft_output = run_command("nft list ruleset")
+    expected_rules = [
+        "tcp dport 389 accept",
+        "udp dport 389 accept",
+    ]
+    missing_rules = [rule for rule in expected_rules if rule not in nft_output]
+    if missing_rules:
+        print(f"Missing firewall rules for LDAP: {missing_rules}")
+        return False
+    return True
+
+
 # -------------------- NTP helper functions--------------------
 def test_ntp_server_reachability(expected_ntp_server):
     """Check if NTP server is reachable via ntpq and marked as primary."""
@@ -491,7 +506,12 @@ def run_tests(machine_name):
         print(f" - ldapsearch test: {'Pass' if ldapsearch_test else 'Fail'}")
 
         slapd_service_active_test = test_service_active_slapd()
-        print(f" - nslcd Service Active Test: {'Pass' if slapd_service_active_test else 'Fail'}")
+        print(f" - slapd Service Active Test: {'Pass' if slapd_service_active_test else 'Fail'}")
+
+        ldap_firewall_test = test_ldap_firewall_rules()
+        print(f" - LDAP Firewall Rules Test: {'Pass' if ldap_firewall_test else 'Fail'}")
+
+
 
         print("\nRunning additional tests specific to the NFS server:")
         
